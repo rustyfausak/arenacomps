@@ -34,6 +34,17 @@ class InitTables extends Migration
             $table->index('region_id');
             $table->index('bracket_id');
         });
+        Schema::create('players', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->string('uid');
+            $table->string('name');
+            $table->integer('realm_id')->unsigned();
+            $table->integer('faction_id')->unsigned();
+            $table->index('realm_id');
+            $table->index('faction_id');
+            $table->unique(['uid', 'realm_id', 'faction_id']);
+        });
         Schema::create('races', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
