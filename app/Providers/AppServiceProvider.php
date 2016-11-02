@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\BattleNetApi;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(BattleNetApi::class, function ($app) {
+            return new BattleNetApi(config('bnet'));
+        });
     }
 }
