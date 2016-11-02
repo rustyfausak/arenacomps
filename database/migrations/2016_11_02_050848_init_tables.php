@@ -47,11 +47,33 @@ class InitTables extends Migration
             $table->string('name');
             $table->unique('name');
         });
+        Schema::create('realms', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('region_id')->unsigned();
+            $table->string('name');
+            $table->string('slug');
+            $table->index('region_id');
+        });
         Schema::create('roles', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->string('name');
             $table->unique('name');
+        });
+        Schema::create('specs', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('role_id')->unsigned();
+            $table->integer('spec_type_id')->unsigned();
+            $table->string('name');
+            $table->index('role_id');
+            $table->index('spec_type_id');
+        });
+        Schema::create('spec_types', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->string('name');
         });
     }
 
@@ -67,6 +89,9 @@ class InitTables extends Migration
         Schema::dropIfExists('brackets');
         Schema::dropIfExists('factions');
         Schema::dropIfExists('races');
+        Schema::dropIfExists('realms');
         Schema::dropIfExists('roles');
+        Schema::dropIfExists('specs');
+        Schema::dropIfExists('spec_types');
     }
 }
