@@ -7,7 +7,4 @@ Homestead.json
 Homestead.yaml
 .env
 bootstrap/cache/
-.env.*.php
-.env.php
-.env
 public/storage/
