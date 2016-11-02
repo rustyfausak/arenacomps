@@ -30,5 +30,6 @@
 # developing
 
  - install [Node](https://nodejs.org/en/download/)
- - `npm install`
- - `gulp`
+   - `npm install`
+   - `gulp`
+ - install [Apache](https://httpd.apache.org/download.cgi)
