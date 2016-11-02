@@ -9,4 +9,9 @@ class SpecType extends Model
     public $timestamps = false;
     protected $table = 'spec_types';
     protected $guarded = [];
+
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

@@ -14,4 +14,9 @@ class Realm extends Model
     {
         return $this->belongsTo('App\Models\Region', 'region_id', 'id');
     }
+
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

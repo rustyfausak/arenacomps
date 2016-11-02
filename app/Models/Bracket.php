@@ -9,4 +9,9 @@ class Bracket extends Model
     public $timestamps = false;
     protected $table = 'brackets';
     protected $guarded = [];
+
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

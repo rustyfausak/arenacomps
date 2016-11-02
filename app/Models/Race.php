@@ -14,4 +14,9 @@ class Race extends Model
     {
         return $this->belongsTo('App\Models\Faction', 'faction_id', 'id');
     }
+
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

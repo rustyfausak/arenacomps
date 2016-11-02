@@ -112,7 +112,7 @@
                             <tr>
                                 <td>{{ $race->id }}</td>
                                 <td>{{ $race->name }}</td>
-                                <td>{{ $race->faction_id }}</td>
+                                <td>{{ $race->faction }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -138,8 +138,8 @@
                             <tr>
                                 <td>{{ $spec->id }}</td>
                                 <td>{{ $spec->name }}</td>
-                                <td>{{ $spec->role_id }}</td>
-                                <td>{{ $spec->spec_type_id }}</td>
+                                <td>{{ $spec->role }}</td>
+                                <td>{{ $spec->specType }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -166,7 +166,7 @@
                                 <td>{{ $realm->id }}</td>
                                 <td>{{ $realm->name }}</td>
                                 <td>{{ $realm->slug }}</td>
-                                <td>{{ $realm->region_id }}</td>
+                                <td>{{ $realm->region }}</td>
                             </tr>
                         @endforeach
                     </tbody>

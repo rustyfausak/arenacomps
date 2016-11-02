@@ -9,4 +9,9 @@ class Faction extends Model
     public $timestamps = false;
     protected $table = 'factions';
     protected $guarded = [];
+
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

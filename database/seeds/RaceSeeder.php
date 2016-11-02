@@ -13,20 +13,20 @@ class RaceSeeder extends Seeder
     public function run()
     {
         foreach ([
-            [1, 'Human', 1],
-            [2, 'Orc', 2],
-            [3, 'Dwarf', 1],
-            [4, 'Night Elf',1],
-            [5, 'Undead', 2],
-            [6, 'Tauren', 2],
-            [7, 'Gnome', 1],
-            [8, 'Troll', 2],
-            [9, 'Goblin', 2],
-            [10, 'Blood Elf',2],
-            [11, 'Draenei', 1],
-            [22, 'Worgen', 1],
+            [1, 'Human', 0],
+            [2, 'Orc', 1],
+            [3, 'Dwarf', 0],
+            [4, 'Night Elf', 0],
+            [5, 'Undead', 1],
+            [6, 'Tauren', 1],
+            [7, 'Gnome', 0],
+            [8, 'Troll', 1],
+            [9, 'Goblin', 1],
+            [10, 'Blood Elf', 1],
+            [11, 'Draenei', 0],
+            [22, 'Worgen', 0],
             [25, 'Pandaren', 1],
-            [26, 'Pandaren', 2],
+            [26, 'Pandaren', 0],
         ] as $data) {
             Race::firstOrCreate([
                 'id' => $data[0],

@@ -9,4 +9,9 @@ class Region extends Model
     public $timestamps = false;
     protected $table = 'regions';
     protected $guarded = [];
+
+    public function __toString()
+    {
+        return $this->name;
+    }
 }
