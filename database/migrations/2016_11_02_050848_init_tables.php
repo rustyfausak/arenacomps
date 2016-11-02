@@ -52,17 +52,6 @@ class InitTables extends Migration
             $table->index('faction_id');
             $table->unique(['uid', 'realm_id', 'faction_id']);
         });
-        Schema::create('players_leaderboards', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
-            $table->increments('id');
-            $table->integer('player_id')->unsigned();
-            $table->integer('leaderboard_id')->unsigned();
-            $table->integer('stat_id')->unsigned();
-            $table->index('player_id');
-            $table->index('leaderboard_id');
-            $table->index('stat_id');
-            $table->unique(['player_id', 'leaderboard_id']);
-        });
         Schema::create('races', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
@@ -104,11 +93,27 @@ class InitTables extends Migration
             $table->increments('id');
             $table->string('name');
         });
-        Schema::create('stats', function (Blueprint $table) {
+         Schema::create('stat_deltas', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->integer('player_id')->unsigned();
             $table->integer('leaderboard_id')->unsigned();
+            $table->integer('stat_id1')->unsigned();
+            $table->integer('stat_id2')->unsigned();
+            $table->integer('rating');
+            $table->integer('wins')->unsigned();
+            $table->integer('losses')->unsigned();
+            $table->index('player_id');
+            $table->index('leaderboard_id');
+            $table->index('stat_id1');
+            $table->index('stat_id2');
+        });
+        Schema::create('stats', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('player_id')->unsigned();
+            $table->integer('init_leaderboard_id')->unsigned();
+            $table->integer('last_leaderboard_id')->unsigned();
             $table->integer('race_id')->unsigned();
             $table->integer('role_id')->unsigned();
             $table->integer('spec_id')->unsigned();
@@ -119,7 +124,8 @@ class InitTables extends Migration
             $table->integer('weekly_wins')->unsigned();
             $table->integer('weekly_losses')->unsigned();
             $table->index('player_id');
-            $table->index('leaderboard_id');
+            $table->index('init_leaderboard_id');
+            $table->index('last_leaderboard_id');
             $table->index('race_id');
             $table->index('role_id');
             $table->index('spec_id');
@@ -139,13 +145,13 @@ class InitTables extends Migration
         Schema::dropIfExists('factions');
         Schema::dropIfExists('leaderboards');
         Schema::dropIfExists('players');
-        Schema::dropIfExists('players_leaderboards');
         Schema::dropIfExists('races');
         Schema::dropIfExists('realms');
         Schema::dropIfExists('regions');
         Schema::dropIfExists('roles');
         Schema::dropIfExists('specs');
         Schema::dropIfExists('spec_types');
+        Schema::dropIfExists('stat_deltas');
         Schema::dropIfExists('stats');
     }
 }
