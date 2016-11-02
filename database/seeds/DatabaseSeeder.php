@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call(BracketSeeder::class);
+        $this->call(GenderSeeder::class);
         $this->call(FactionSeeder::class);
         $this->call(RaceSeeder::class);
         $this->call(RegionSeeder::class);

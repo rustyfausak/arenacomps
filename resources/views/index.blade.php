@@ -173,5 +173,28 @@
                 </table>
             </div>
         </div>
+        <div class="col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading panel-title">
+                    Genders
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (App\Models\Gender::all() as $gender)
+                            <tr>
+                                <td>{{ $gender->id }}</td>
+                                <td>{{ $gender->name }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 @endsection

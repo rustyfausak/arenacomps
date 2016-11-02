@@ -19,6 +19,12 @@ class InitTables extends Migration
             $table->string('name');
             $table->unique('name');
         });
+        Schema::create('genders', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->string('name');
+            $table->unique('name');
+        });
         Schema::create('factions', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
@@ -41,9 +47,21 @@ class InitTables extends Migration
             $table->string('name');
             $table->integer('realm_id')->unsigned();
             $table->integer('faction_id')->unsigned();
+            $table->index('uid');
             $table->index('realm_id');
             $table->index('faction_id');
             $table->unique(['uid', 'realm_id', 'faction_id']);
+        });
+        Schema::create('players_leaderboards', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('player_id')->unsigned();
+            $table->integer('leaderboard_id')->unsigned();
+            $table->integer('stat_id')->unsigned();
+            $table->index('player_id');
+            $table->index('leaderboard_id');
+            $table->index('stat_id');
+            $table->unique(['player_id', 'leaderboard_id']);
         });
         Schema::create('races', function (Blueprint $table) {
             $table->engine = 'InnoDB';
@@ -86,6 +104,27 @@ class InitTables extends Migration
             $table->increments('id');
             $table->string('name');
         });
+        Schema::create('stats', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('player_id')->unsigned();
+            $table->integer('leaderboard_id')->unsigned();
+            $table->integer('race_id')->unsigned();
+            $table->integer('role_id')->unsigned();
+            $table->integer('spec_id')->unsigned();
+            $table->integer('gender_id')->unsigned();
+            $table->integer('rating')->unsigned();
+            $table->integer('season_wins')->unsigned();
+            $table->integer('season_losses')->unsigned();
+            $table->integer('weekly_wins')->unsigned();
+            $table->integer('weekly_losses')->unsigned();
+            $table->index('player_id');
+            $table->index('leaderboard_id');
+            $table->index('race_id');
+            $table->index('role_id');
+            $table->index('spec_id');
+            $table->index('gender_id');
+        });
     }
 
     /**
@@ -95,14 +134,18 @@ class InitTables extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('leaderboards');
-        Schema::dropIfExists('regions');
         Schema::dropIfExists('brackets');
+        Schema::dropIfExists('genders');
         Schema::dropIfExists('factions');
+        Schema::dropIfExists('leaderboards');
+        Schema::dropIfExists('players');
+        Schema::dropIfExists('players_leaderboards');
         Schema::dropIfExists('races');
         Schema::dropIfExists('realms');
+        Schema::dropIfExists('regions');
         Schema::dropIfExists('roles');
         Schema::dropIfExists('specs');
         Schema::dropIfExists('spec_types');
+        Schema::dropIfExists('stats');
     }
 }
