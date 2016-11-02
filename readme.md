@@ -14,20 +14,20 @@
 
 # installation
 
-    git clone https://github.com/rustyfausak/arenacomps arenacomps
+    $ git clone https://github.com/rustyfausak/arenacomps arenacomps
     // set `storage/` and `bootstrap/cache/` to be writeable by your web server
-    cd arenacomps
-    composer install
-    cp .env.example .env
-    mysql -u .. -p ..
+    $ cd arenacomps
+    $ composer install
+    $ cp .env.example .env
+    // edit `.env` with your config
+    $ php artisan key:generate
+    $ mysql -u .. -p ..
     > create database arenacomps character set utf8 collate utf8_unicode_ci;
+    $ php artisan migrate:refresh --seed
 
 # configuration
 
- - run `php artisan migrate:refresh --seed`
- - edit `.env` with your environment variables
- - set web root to `public/`
- - run `php artisan key:generate`
+ - set web root to `arenacomps/public/`
 
 # developing
 
