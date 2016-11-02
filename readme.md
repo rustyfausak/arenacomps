@@ -15,6 +15,7 @@
 # installation
 
     git clone https://github.com/rustyfausak/arenacomps arenacomps
+    // set `storage/` and `bootstrap/cache/` to be writeable by your web server
     cd arenacomps
     composer install
     cp .env.example .env
@@ -26,7 +27,6 @@
  - run `php artisan migrate:refresh --seed`
  - edit `.env` with your environment variables
  - set web root to `public/`
- - set `storage/` and `bootstrap/cache/` to be writeable by your web server
  - run `php artisan key:generate`
 
 # developing
