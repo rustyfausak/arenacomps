@@ -16,9 +16,12 @@
     cd arenacomps
     composer install
     cp .env.example .env
+    mysql -u .. -p ..
+    > create database arenacomps character set utf8 collate utf8_unicode_ci;
 
 # configuration
 
+ - run `php artisan migrate:refresh --seed`
  - edit `.env` with your environment variables
  - set web root to `public/`
  - set `storage/` and `bootstrap/cache/` to be writeable by your web server
