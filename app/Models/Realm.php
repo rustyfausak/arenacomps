@@ -9,4 +9,9 @@ class Realm extends Model
     public $timestamps = false;
     protected $table = 'realms';
     protected $guarded = [];
+
+    public function region()
+    {
+        return $this->belongsTo('App\Models\Region', 'region_id', 'id');
+    }
 }
