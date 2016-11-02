@@ -31,6 +31,6 @@
 
 # developing
 
- - install [Node](https://nodejs.org/en/download/)
+ - install [Node >= 6.x](https://nodejs.org/en/download/)
    - `npm install`
    - `gulp`
