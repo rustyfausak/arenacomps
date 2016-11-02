@@ -1,14 +1,16 @@
 # requirements
 
- - [PHP >= 5.6.4](http://php.net/downloads.php)
-   - OpenSSL PHP Extension
-   - PDO PHP Extension
-   - Mbstring PHP Extension
-   - Tokenizer PHP Extension
-   - XML PHP Extension
+ - LAMP or [WAMP](http://www.wampserver.com/en/)
+   - [PHP >= 5.6.4](http://php.net/downloads.php)
+     - OpenSSL PHP Extension
+     - PDO PHP Extension
+     - Mbstring PHP Extension
+     - Tokenizer PHP Extension
+     - XML PHP Extension
+   - [MySQL](https://www.mysql.com/downloads/)
+   - [Apache](https://httpd.apache.org/download.cgi)
  - [Composer](https://getcomposer.org/)
  - [git](https://git-scm.com/downloads)
- - [MySQL](https://www.mysql.com/downloads/)
 
 # installation
 
@@ -32,4 +34,3 @@
  - install [Node](https://nodejs.org/en/download/)
    - `npm install`
    - `gulp`
- - install [Apache](https://httpd.apache.org/download.cgi)
