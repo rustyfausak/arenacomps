@@ -1,11 +1,11 @@
 # requirements
 
  - [PHP >= 5.6.4](http://php.net/downloads.php)
- ..- OpenSSL PHP Extension
- ..- PDO PHP Extension
- ..- Mbstring PHP Extension
- ..- Tokenizer PHP Extension
- ..- XML PHP Extension
+   - OpenSSL PHP Extension
+   - PDO PHP Extension
+   - Mbstring PHP Extension
+   - Tokenizer PHP Extension
+   - XML PHP Extension
  - [Composer](https://getcomposer.org/)
  - [git](https://git-scm.com/downloads)
  - [MySQL](https://www.mysql.com/downloads/)
