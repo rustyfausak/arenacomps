@@ -34,3 +34,7 @@
  - install [Node >= 6.x](https://nodejs.org/en/download/)
    - `npm install`
    - `gulp`
+
+# collecting data
+
+    $ php artisan leaderboard:get -h
