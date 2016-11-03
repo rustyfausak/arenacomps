@@ -4,20 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Player extends Model
+class Delta extends Model
 {
     public $timestamps = false;
-    protected $table = 'players';
+    protected $table = 'deltas';
     protected $guarded = [];
 
-    public function realm()
+    public function player()
     {
-        return $this->belongsTo('App\Models\Realm', 'realm_id', 'id');
+        return $this->belongsTo('App\Models\Player', 'player_id', 'id');
     }
 
-    public function faction()
+    public function bracket()
     {
-        return $this->belongsTo('App\Models\Faction', 'faction_id', 'id');
+        return $this->belongsTo('App\Models\Bracket', 'bracket_id', 'id');
+    }
+
+    public function leaderboard()
+    {
+        return $this->belongsTo('App\Models\Leaderboard', 'leaderboard_id', 'id');
     }
 
     public function race()
@@ -38,21 +43,5 @@ class Player extends Model
     public function gender()
     {
         return $this->belongsTo('App\Models\Gender', 'gender_id', 'id');
-    }
-
-    public function __toString()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Get the UID for the player.
-     *
-     * @param string $name
-     * @return string
-     */
-    public static function getUid($name)
-    {
-        return md5($name);
     }
 }

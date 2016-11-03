@@ -1,6 +1,9 @@
 <?php
 
 namespace App;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\RequestException;
 
 class BattleNetApi
 {
@@ -12,24 +15,55 @@ class BattleNetApi
     protected $config;
 
     /**
+     * The Guzzle client for making requests.
+     *
+     * @var GuzzleHttp\Client
+     */
+    protected $client;
+
+    /**
      * @param array $config
      */
     public function __construct($config)
     {
         $this->config = $config;
+        $this->client = null;
     }
 
+    /**
+     * Make a HTTP request and return the response body. Throws an exception on error.
+     *
+     * @param string $region    The region, like 'us' or 'eu'.
+     * @param string $endpoint  API endpoint, like '/wow/leaderboard/3v3'.
+     * @param array  $params    Array of parameters, like ['locale' => 'en_US'].
+     * @return string
+     * @throws \Exception
+     */
     public function call($region, $endpoint, $params)
     {
         if (!array_key_exists('apikey', $this->config) || !$this->config['apikey']) {
             throw new \Exception("Missing " . __CLASS__ . " config 'apikey'.");
         }
-        $params['apikey'] = $this->config['apikey'];
-        $url = "https://{$region}.api.battle.net{$endpoint}?";
-        foreach ($params as $k => $v) {
-            $url .= "&{$k}=" . urlencode($v);
+        if (!$this->client) {
+            $this->client = new Client([
+                'timeout' => 90,
+                'verify' => false,
+            ]);
         }
-        print $url . "\n";
+        $params['apikey'] = $this->config['apikey'];
+        $url = "https://{$region}.api.battle.net{$endpoint}";
+        try {
+            $response = $this->client->request('GET', $url, ['query' => $params]);
+        }
+        catch (RequestException $e) {
+            $str = __CLASS__ . '->call() ERROR: ' . $e->getMessage();
+            $str .= "\nRequest:\n" . Psr7\str($e->getRequest());
+            if ($e->hasResponse()) {
+                $str .= "\nResponse:\n" . Psr7\str($e->getResponse());
+            }
+            throw new \Exception($str);
+        }
+        return $response->getBody();
     }
 
     /**
