@@ -262,14 +262,17 @@ class GetLeaderboard extends Command
                 ->first();
             if ($stat) {
                 if ($stat->season_wins != $row['seasonWins'] || $stat->season_losses != $row['seasonLosses']) {
-                    Snapshot::create([
-                        'player_id' => $player->id,
-                        'bracket_id' => $bracket->id,
+                    $group = Group::firstOrCreate([
                         'leaderboard_id' => $leaderboard->id,
-                        'spec_id' => $row['specId'],
-                        'rating' => $row['rating'],
+                        'faction_id' => $row['factionId'],
                         'wins' => $row['seasonWins'] - $stat->season_wins,
                         'losses' => $row['seasonLosses'] - $stat->season_losses,
+                    ]);
+                    Snapshot::create([
+                        'player_id' => $player->id,
+                        'group_id' => $group->id,
+                        'spec_id' => $row['specId'],
+                        'rating' => $row['rating'],
                     ]);
                 }
                 $stat->leaderboard_id = $leaderboard->id;

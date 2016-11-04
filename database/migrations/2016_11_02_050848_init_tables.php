@@ -46,12 +46,22 @@ class InitTables extends Migration
             $table->string('name');
             $table->unique('name');
         });
+        Schema::create('groups', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('leaderboard_id')->unsigned();
+            $table->integer('faction_id')->unsigned();
+            $table->integer('wins')->unsigned();
+            $table->integer('losses')->unsigned();
+            $table->index('leaderboard_id');
+            $table->index('faction_id');
+            $table->unique(['leaderboard_id', 'faction_id', 'wins', 'losses']);
+        });
         Schema::create('leaderboards', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->integer('region_id')->unsigned();
             $table->integer('bracket_id')->unsigned();
-            $table->dateTime('analyzed_at')->nullable()->default(null);
             $table->timestamps();
             $table->index('region_id');
             $table->index('bracket_id');
@@ -107,21 +117,16 @@ class InitTables extends Migration
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->integer('player_id')->unsigned();
-            $table->integer('leaderboard_id')->unsigned();
+            $table->integer('group_id')->unsigned();
             $table->integer('spec_id')->unsigned();
             $table->integer('rating')->unsigned();
-            $table->integer('wins')->unsigned();
-            $table->integer('losses')->unsigned();
             $table->integer('team_id')->unsigned();
             $table->integer('comp_id')->unsigned();
             $table->index('player_id');
-            $table->index('leaderboard_id');
+            $table->index('group_id');
             $table->index('spec_id');
             $table->index('team_id');
             $table->index('comp_id');
-            $table->index(['leaderboard_id', 'wins', 'losses']);
-            $table->index(['wins', 'losses']);
-            $table->unique(['player_id', 'leaderboard_id']);
         });
         Schema::create('specs', function (Blueprint $table) {
             $table->engine = 'InnoDB';
@@ -180,6 +185,7 @@ class InitTables extends Migration
         Schema::dropIfExists('brackets');
         Schema::dropIfExists('comps');
         Schema::dropIfExists('genders');
+        Schema::dropIfExists('groups');
         Schema::dropIfExists('factions');
         Schema::dropIfExists('leaderboards');
         Schema::dropIfExists('players');

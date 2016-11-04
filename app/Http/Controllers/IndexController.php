@@ -54,6 +54,8 @@ class IndexController extends Controller
         if ($region) {
             $q->where('region_id', '=', $region->id);
         }
+        $q->orderBy('created_at', 'DESC')
+            ->limit(1);
         $leaderboard_ids = $q->pluck('id')->toArray();
         $stats = Stat::with('player')
             ->whereIn('leaderboard_id', $leaderboard_ids)
