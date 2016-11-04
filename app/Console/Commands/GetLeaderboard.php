@@ -7,7 +7,6 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 
 use App\Models\Bracket;
-use App\Models\Delta;
 use App\Models\Faction;
 use App\Models\Gender;
 use App\Models\Leaderboard;
@@ -16,6 +15,7 @@ use App\Models\Race;
 use App\Models\Realm;
 use App\Models\Region;
 use App\Models\Role;
+use App\Models\Snapshot;
 use App\Models\Spec;
 use App\Models\Stat;
 
@@ -62,8 +62,8 @@ class GetLeaderboard extends Command
     public function getOptions()
     {
         return [
-            ['region', 'r', InputOption::VALUE_OPTIONAL, 'The leaderboard region.', 'us'],
-            ['bracket', 'b', InputOption::VALUE_OPTIONAL, 'The leaderboard bracket.', '3v3'],
+            ['region', 'r', InputOption::VALUE_OPTIONAL, 'The region.', 'us'],
+            ['bracket', 'b', InputOption::VALUE_OPTIONAL, 'The bracket.', '3v3'],
             ['locale', 'l', InputOption::VALUE_OPTIONAL, 'The locale for the response. Defaults to english.', null],
             ['save', 's', InputOption::VALUE_OPTIONAL, 'Save the response data to a file path.', null],
             ['file', 'f', InputOption::VALUE_OPTIONAL, 'Use a file instead of requesting data.', null],
@@ -262,35 +262,24 @@ class GetLeaderboard extends Command
                 ->first();
             if ($stat) {
                 if ($stat->season_wins != $row['seasonWins'] || $stat->season_losses != $row['seasonLosses']) {
-                    Delta::create([
+                    Snapshot::create([
                         'player_id' => $player->id,
                         'bracket_id' => $bracket->id,
                         'leaderboard_id' => $leaderboard->id,
-                        'race_id' => $row['raceId'],
-                        'role_id' => $row['classId'],
                         'spec_id' => $row['specId'],
-                        'gender_id' => $row['genderId'],
+                        'rating' => $row['rating'],
                         'wins' => $row['seasonWins'] - $stat->season_wins,
                         'losses' => $row['seasonLosses'] - $stat->season_losses,
                     ]);
                 }
-                $changes = false;
-                foreach ([
-                    'ranking' => 'ranking',
-                    'rating' => 'rating',
-                    'season_wins' => 'seasonWins',
-                    'season_losses' => 'seasonLosses',
-                    'weekly_wins' => 'weeklyWins',
-                    'weekly_losses' => 'weeklyLosses',
-                ] as $stat_key => $row_key) {
-                    if ($stat->{$stat_key} != $row[$row_key]) {
-                        $stat->{$stat_key} = $row[$row_key];
-                        $changes = true;
-                    }
-                }
-                if ($changes) {
-                    $stat->save();
-                }
+                $stat->leaderboard_id = $leaderboard->id;
+                $stat->ranking = $row['ranking'];
+                $stat->rating = $row['rating'];
+                $stat->season_wins = $row['seasonWins'];
+                $stat->season_losses = $row['seasonLosses'];
+                $stat->weekly_wins = $row['weeklyWins'];
+                $stat->weekly_losses = $row['weeklyLosses'];
+                $stat->save();
             }
             else {
                 $stat = Stat::create([

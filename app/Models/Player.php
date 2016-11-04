@@ -40,9 +40,25 @@ class Player extends Model
         return $this->belongsTo('App\Models\Gender', 'gender_id', 'id');
     }
 
+    public function stats()
+    {
+        return $this->hasMany('App\Models\Stat', 'player_id', 'id');
+    }
+
     public function __toString()
     {
         return $this->name;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getTeams()
+    {
+        return Team::where('player_id1', '=', $this->id)
+            ->orWhere('player_id2', '=', $this->id)
+            ->orWhere('player_id3', '=', $this->id)
+            ->get();
     }
 
     /**

@@ -13,12 +13,14 @@ class BracketSeeder extends Seeder
     public function run()
     {
         foreach ([
-            '2v2',
-            '3v3',
-            '5v5',
-            'rbg'
-        ] as $name) {
-            Bracket::firstOrCreate(['name' => $name]);
+            ['2v2', 2],
+            ['3v3', 3],
+            ['5v5', 5],
+        ] as $data) {
+            Bracket::firstOrCreate([
+                'name' => $data[0],
+                'size' => $data[1]
+            ]);
         }
     }
 }

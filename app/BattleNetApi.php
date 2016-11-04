@@ -46,7 +46,7 @@ class BattleNetApi
         }
         if (!$this->client) {
             $this->client = new Client([
-                'timeout' => 90,
+                'timeout' => 120,
                 'verify' => false,
             ]);
         }
@@ -56,12 +56,7 @@ class BattleNetApi
             $response = $this->client->request('GET', $url, ['query' => $params]);
         }
         catch (RequestException $e) {
-            $str = __CLASS__ . '->call() ERROR: ' . $e->getMessage();
-            $str .= "\nRequest:\n" . Psr7\str($e->getRequest());
-            if ($e->hasResponse()) {
-                $str .= "\nResponse:\n" . Psr7\str($e->getResponse());
-            }
-            throw new \Exception($str);
+            throw new \Exception(__CLASS__ . '->call() ERROR: ' . $e->getMessage());
         }
         return $response->getBody();
     }
