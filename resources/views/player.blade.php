@@ -59,29 +59,29 @@
             <tbody>
                 @foreach ($player->getTeams() as $team)
                     <?php
-                    $perf = $team->getPerf();
+                    $performance = $team->getPerformance($season, null, $term);
                     ?>
                     <tr>
                         <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
                         <td><a href="{{ route('player', $team->player_id2) }}">{{ $team->player2->name }}</a></td>
                         <td><a href="{{ route('player', $team->player_id3) }}">{{ $team->player3->name }}</a></td>
                         <td colspan="3">All</td>
-                        <td>{{ $perf['avg_rating'] }}</td>
-                        <td>{{ $perf['wins'] }}</td>
-                        <td>{{ $perf['losses'] }}</td>
+                        <td>{{ $performance->avg_rating }}</td>
+                        <td>{{ $performance->wins }}</td>
+                        <td>{{ $performance->losses }}</td>
                     </tr>
-                    @foreach ($perf['by_comp'] as $comp_id => $comp_perf)
+                    @foreach ($team->getComps() as $comp)
                         <?php
-                        $comp = App\Models\Comp::find($comp_id);
+                        $comp_performance = $comp->getPerformance($season, $team, $term);
                         ?>
                         <tr>
                             <td colspan="3"></td>
                             <td>{{ $comp->spec1->name }} {{ $comp->spec1->role->name }}</td>
                             <td>{{ $comp->spec2->name }} {{ $comp->spec2->role->name }}</td>
                             <td>{{ $comp->spec3->name }} {{ $comp->spec3->role->name }}</td>
-                            <td>{{ $comp_perf['avg_rating'] }}</td>
-                            <td>{{ $comp_perf['wins'] }}</td>
-                            <td>{{ $comp_perf['losses'] }}</td>
+                            <td>{{ $comp_performance->avg_rating }}</td>
+                            <td>{{ $comp_performance->wins }}</td>
+                            <td>{{ $comp_performance->losses }}</td>
                         </tr>
                     @endforeach
                 @endforeach

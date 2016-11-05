@@ -19,4 +19,13 @@ const app = new Vue({
 });
 
 $(document).ready(function () {
+    $('[data-click-input-name]').on('click', function () {
+        $('[name="' + $(this).attr('data-click-input-name') + '"]').val($(this).attr('data-click-input-value'));
+    });
+    $('[data-submit-on-click]').on('click', function () {
+        $(this).parents('form').submit();
+    });
+    $('[data-submit-on-change]').on('change', function () {
+        $(this).parents('form').submit();
+    });
 });

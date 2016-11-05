@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\ColumnSequence;
 use Illuminate\Database\Eloquent\Model;
 
 class Team extends Model
 {
+    use ColumnSequence;
+
     public $timestamps = false;
     protected $table = 'teams';
     protected $guarded = [];
 
-    protected $_perf = null;
+    protected static $col_seq_prefix = 'player_id';
 
     public function player1()
     {
@@ -38,82 +41,26 @@ class Team extends Model
     }
 
     /**
-     * @return array
+     * @return Collection of Comp
      */
-    public function getPerf()
+    public function getComps()
     {
-        if (!$this->_perf) {
-            return $this->generatePerf();
-        }
-        return $this->_perf;
-    }
-
-    public function generatePerf()
-    {
-        $this->_perf = [
-            'num_snapshots' => 0,
-            'total_rating' => 0,
-            'avg_rating' => 0,
-            'wins' => 0,
-            'losses' => 0,
-            'by_comp' => [],
-        ];
-        $snapshots = Snapshot::where('team_id', '=', $this->id)
-            ->get();
-        $size = 1;
-        foreach ($snapshots as $snapshot) {
-            $size = $snapshot->leaderboard->bracket->size;
-            $this->_perf['num_snapshots']++;
-            $this->_perf['total_rating'] += $snapshot->rating;
-            $this->_perf['wins'] += $snapshot->wins;
-            $this->_perf['losses'] += $snapshot->losses;
-            if (!array_key_exists($snapshot->comp_id, $this->_perf['by_comp'])) {
-                $this->_perf['by_comp'][$snapshot->comp_id] = [
-                    'num_snapshots' => 0,
-                    'total_rating' => 0,
-                    'avg_rating' => 0,
-                    'wins' => 0,
-                    'losses' => 0,
-                ];
-            }
-            $this->_perf['by_comp'][$snapshot->comp_id]['num_snapshots']++;
-            $this->_perf['by_comp'][$snapshot->comp_id]['total_rating'] += $snapshot->rating;
-            $this->_perf['by_comp'][$snapshot->comp_id]['wins'] += $snapshot->wins;
-            $this->_perf['by_comp'][$snapshot->comp_id]['losses'] += $snapshot->losses;
-        }
-        foreach ($this->_perf['by_comp'] as $comp_id => $comp_perf) {
-            if ($comp_perf['num_snapshots']) {
-                $comp_perf['avg_rating'] = round($comp_perf['total_rating'] / $comp_perf['num_snapshots']);
-            }
-            $comp_perf['wins'] /= $size;
-            $comp_perf['losses'] /= $size;
-            $this->_perf['by_comp'][$comp_id] = $comp_perf;
-        }
-        if ($this->_perf['num_snapshots']) {
-            $this->_perf['avg_rating'] = round($this->_perf['total_rating'] / $this->_perf['num_snapshots']);
-        }
-        $this->_perf['wins'] /= $size;
-        $this->_perf['losses'] /= $size;
-        return $this->_perf;
+        $comp_ids = Snapshot::where('team_id', '=', $this->id)
+            ->groupBy('comp_id')
+            ->pluck('comp_id')
+            ->toArray();
+        return Comp::whereIn('id', $comp_ids)->get();
     }
 
     /**
-     * @param array $player_ids
+     * @param Season  $season
+     * @param Comp    $comp
+     * @param Term    $term
+     * @return array
      */
-    public static function getOrBuild($player_ids)
+    public function getPerformance(Season $season, Comp $comp = null, Term $term = null)
     {
-        $q = self::whereRaw(1);
-        $params = [];
-        for ($i = 0; $i < sizeof($player_ids); $i++) {
-            $col = 'player_id' . ($i + 1);
-            $val = $player_ids[$i];
-            $q->where($col, '=', $val);
-            $params[$col] = $val;
-        }
-        $obj = $q->first();
-        if (!$obj) {
-            $obj = self::create($params);
-        }
-        return $obj;
+        $bracket = Bracket::where('size', '=', $this->getSize())->first();
+        return Performance::build($bracket, $season, $this, $comp, $term);
     }
 }

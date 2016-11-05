@@ -62,9 +62,33 @@ class InitTables extends Migration
             $table->increments('id');
             $table->integer('region_id')->unsigned();
             $table->integer('bracket_id')->unsigned();
+            $table->integer('season_id')->unsigned();
+            $table->integer('term_id')->unsigned();
             $table->timestamps();
+            $table->datetime('completed_at')->nullable()->default(null);
             $table->index('region_id');
             $table->index('bracket_id');
+            $table->index('season_id');
+            $table->index('term_id');
+        });
+        Schema::create('performance', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('bracket_id')->unsigned();
+            $table->integer('season_id')->unsigned();
+            $table->integer('team_id')->unsigned()->nullable()->default(null);
+            $table->integer('comp_id')->unsigned()->nullable()->default(null);
+            $table->integer('term_id')->unsigned()->nullable()->default(null);
+            $table->integer('wins')->unsigned()->default(0);
+            $table->integer('losses')->unsigned()->default(0);
+            $table->integer('avg_rating')->unsigned()->default(0);
+            $table->timestamps();
+            $table->index('bracket_id');
+            $table->index('season_id');
+            $table->index('team_id');
+            $table->index('comp_id');
+            $table->index('term_id');
+            $table->index(['team_id', 'comp_id']);
         });
         Schema::create('players', function (Blueprint $table) {
             $table->engine = 'InnoDB';
@@ -113,6 +137,14 @@ class InitTables extends Migration
             $table->string('name');
             $table->unique('name');
         });
+        Schema::create('seasons', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->string('name');
+            $table->date('start_date');
+            $table->date('end_date')->nullable()->default(null);
+            $table->unique('name');
+        });
         Schema::create('snapshots', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
@@ -120,8 +152,8 @@ class InitTables extends Migration
             $table->integer('group_id')->unsigned();
             $table->integer('spec_id')->unsigned();
             $table->integer('rating')->unsigned();
-            $table->integer('team_id')->unsigned();
-            $table->integer('comp_id')->unsigned();
+            $table->integer('team_id')->unsigned()->nullable()->default(null);
+            $table->integer('comp_id')->unsigned()->nullable()->default(null);
             $table->index('player_id');
             $table->index('group_id');
             $table->index('spec_id');
@@ -173,6 +205,14 @@ class InitTables extends Migration
             $table->index('player_id4');
             $table->index('player_id5');
         });
+        Schema::create('terms', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->string('name');
+            $table->date('start_date');
+            $table->date('end_date')->nullable()->default(null);
+            $table->unique('name');
+        });
     }
 
     /**
@@ -188,15 +228,18 @@ class InitTables extends Migration
         Schema::dropIfExists('groups');
         Schema::dropIfExists('factions');
         Schema::dropIfExists('leaderboards');
+        Schema::dropIfExists('performance');
         Schema::dropIfExists('players');
         Schema::dropIfExists('races');
         Schema::dropIfExists('realms');
         Schema::dropIfExists('regions');
         Schema::dropIfExists('roles');
+        Schema::dropIfExists('seasons');
         Schema::dropIfExists('snapshots');
         Schema::dropIfExists('specs');
         Schema::dropIfExists('spec_types');
         Schema::dropIfExists('stats');
         Schema::dropIfExists('teams');
+        Schema::dropIfExists('terms');
     }
 }

@@ -14,4 +14,12 @@ class Bracket extends Model
     {
         return $this->name;
     }
+
+    /**
+     * @return Bracket
+     */
+    public static function getDefault()
+    {
+        return self::where('name', '=', '3v3')->first();
+    }
 }

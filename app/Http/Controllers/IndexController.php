@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Session;
+use Illuminate\Http\Request;
+
 use App\Models\Bracket;
 use App\Models\Comp;
 use App\Models\Faction;
@@ -34,27 +37,17 @@ class IndexController extends Controller
     }
 
     /**
-     * @param string      $bracket_name
-     * @param string|null $region_name  Set to null for all
      */
-    public function getLeaderboard($bracket_name = '3v3', $region_name = null)
+    public function getLeaderboard()
     {
-        $bracket = Bracket::where('name', '=', $bracket_name)->first();
-        if (!$bracket) {
-            return route('index');
-        }
-        $region = null;
-        if ($region_name) {
-            $region = Region::where('name', 'LIKE', $region_name)->first();
-            if (!$region) {
-                return route('index');
-            }
-        }
+        $bracket = OptionsController::getBracket();
+        $region = OptionsController::getRegion();
         $q = Leaderboard::where('bracket_id', '=', $bracket->id);
         if ($region) {
             $q->where('region_id', '=', $region->id);
         }
-        $q->orderBy('created_at', 'DESC')
+        $q->whereNotNull('completed_at')
+            ->orderBy('created_at', 'DESC')
             ->limit(1);
         $leaderboard_ids = $q->pluck('id')->toArray();
         $stats = Stat::with('player')
@@ -62,16 +55,31 @@ class IndexController extends Controller
             ->orderBy('rating', 'DESC')
             ->paginate(20);
         return view('leaderboard', [
-            'bracket' => $bracket,
             'stats' => $stats,
         ]);
     }
 
-    public function getComps()
+    /**
+     * @param string $bracket_name
+     */
+    public function getComps($bracket_name = '3v3')
     {
+        $bracket = Bracket::where('name', '=', $bracket_name)->first();
+        if (!$bracket) {
+            return route('index');
+        }
         $comps = Comp::all();
         return view('comps', [
-            'comps' => $comps
+            'comps' => $comps,
         ]);
+    }
+
+    public function postSetOptions(Request $request)
+    {
+        OptionsController::setBracket($request->input('bracket'));
+        OptionsController::setRegion($request->input('region'));
+        OptionsController::setSeason($request->input('season'));
+        OptionsController::setTerm($request->input('term'));
+        return back();
     }
 }

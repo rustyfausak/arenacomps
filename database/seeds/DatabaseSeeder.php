@@ -17,7 +17,9 @@ class DatabaseSeeder extends Seeder
         $this->call(RaceSeeder::class);
         $this->call(RegionSeeder::class);
         $this->call(RoleSeeder::class);
+        $this->call(SeasonSeeder::class);
         $this->call(SpecSeeder::class);
         $this->call(SpecTypeSeeder::class);
+        $this->call(TermSeeder::class);
     }
 }

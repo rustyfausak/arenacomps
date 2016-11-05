@@ -19,4 +19,9 @@ class Group extends Model
     {
         return $this->belongsTo('App\Models\Faction', 'faction_id', 'id');
     }
+
+    public function snapshots()
+    {
+        return $this->hasMany('App\Models\Snapshots', 'snapshot_id', 'id');
+    }
 }

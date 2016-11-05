@@ -9,15 +9,18 @@ use Symfony\Component\Console\Input\InputOption;
 use App\Models\Bracket;
 use App\Models\Faction;
 use App\Models\Gender;
+use App\Models\Group;
 use App\Models\Leaderboard;
 use App\Models\Player;
 use App\Models\Race;
 use App\Models\Realm;
 use App\Models\Region;
 use App\Models\Role;
+use App\Models\Season;
 use App\Models\Snapshot;
 use App\Models\Spec;
 use App\Models\Stat;
+use App\Models\Term;
 
 class GetLeaderboard extends Command
 {
@@ -76,6 +79,14 @@ class GetLeaderboard extends Command
     public function handle()
     {
         try {
+            $season = Season::getActive();
+            if (!$season) {
+                throw new \Exception("No active season found.");
+            }
+            $term = Term::getActive();
+            if (!$term) {
+                throw new \Exception("No active term found.");
+            }
             if ($this->option('file')) {
                 $this->parseFile($this->option('file'));
             }
@@ -217,9 +228,13 @@ class GetLeaderboard extends Command
             }
         }
 
+        $season = Season::getActive();
+        $term = Term::getActive();
         $leaderboard = Leaderboard::create([
             'region_id' => $region->id,
-            'bracket_id' => $bracket->id
+            'bracket_id' => $bracket->id,
+            'season_id' => $season->id,
+            'term_id' => $term->id,
         ]);
 
         foreach ($data['rows'] as $n => $row) {
@@ -265,8 +280,8 @@ class GetLeaderboard extends Command
                     $group = Group::firstOrCreate([
                         'leaderboard_id' => $leaderboard->id,
                         'faction_id' => $row['factionId'],
-                        'wins' => $row['seasonWins'] - $stat->season_wins,
-                        'losses' => $row['seasonLosses'] - $stat->season_losses,
+                        'wins' => max(0, $row['seasonWins'] - $stat->season_wins),
+                        'losses' => max(0, $row['seasonLosses'] - $stat->season_losses),
                     ]);
                     Snapshot::create([
                         'player_id' => $player->id,
@@ -298,5 +313,8 @@ class GetLeaderboard extends Command
                 ]);
             }
         }
+
+        $leaderboard->completed_at = date("Y-m-d H:i:s");
+        $leaderboard->save();
     }
 }

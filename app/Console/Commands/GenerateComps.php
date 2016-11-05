@@ -45,6 +45,17 @@ class GenerateComps extends Command
     const MIN_SIMILAR_SNAPSHOTS = 3;
 
     /**
+     * The number of seconds in either direction to look for other snapshots for a player.
+     */
+    const CONSIDER_SNAPSHOTS_WITHIN_SECONDS = 60 * 60 * 24 * 7;
+
+    /**
+     * The minimum number of times a player must be put on a team with another player before
+     * the team can be finalized.
+     */
+    const MIN_TEAMMATE_COUNT = 3;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -55,161 +66,23 @@ class GenerateComps extends Command
     }
 
     /**
-     * Specify the command options.
-     *
-     * @return array
-     */
-    public function getOptions()
-    {
-        return [
-            ['region', 'r', InputOption::VALUE_OPTIONAL, 'The region.', 'us'],
-            ['bracket', 'b', InputOption::VALUE_OPTIONAL, 'The bracket.', '3v3'],
-        ];
-    }
-
-    /**
      * Execute the console command.
      */
     public function handle()
     {
         try {
-            $region = Region::where('name', 'LIKE', $this->option('region'))->first();
-            if (!$region) {
-                throw new \Exception("Invalid region '{$this->option('region')}'.");
-            }
-            $bracket = Bracket::where('name', 'LIKE', $this->option('bracket'))->first();
-            if (!$bracket) {
-                throw new \Exception("Invalid bracket '{$this->option('bracket')}'.");
-            }
-            $leaderboard_ids = DB::table('leaderboards')
-                ->whereRaw('created_at > (NOW() - INTERVAL 1 DAY)')
-                ->where('bracket_id', '=', $bracket->id)
-                ->where('region_id', '=', $region->id)
-                ->pluck('id')
-                ->toArray();
-            $player_ids = DB::table('snapshots AS s')
-                ->select('s.player_id')
-                ->whereIn('s.leaderboard_id', $leaderboard_ids)
-                ->groupBy('s.player_id')
-                ->pluck('s.player_id')
-                ->toArray();
-            foreach ($player_ids as $player_id) {
-                $this->info("Player #{$player_id}");
-
-                $player = Player::find($player_id);
-
-                // Find related players (other players who appeared in the same leaderboards with
-                // the same win/loss)
-                $sql = "
-                    SELECT
-                        `leaderboard_id`,
-                        GROUP_CONCAT(`player_id`) AS `player_ids`
-                    FROM `snapshots`
-                    WHERE `leaderboard_id` IN (" . implode(',', $leaderboard_ids) . ")
-                    GROUP BY
-                        `leaderboard_id`,
-                        `wins`,
-                        `losses`
-                    HAVING {$player_id} IN (`player_ids`)";
-                $results = DB::select($sql);
-                if (sizeof($results) < self::MIN_SIMILAR_SNAPSHOTS) {
-                    // Cant draw any conclusions when there are too few data points for this player
-                    $this->line("\tnot enough data");
-                    continue;
-                }
-
-                // Count up the occurences of related players
-                $rel_map = [];
-                foreach ($results as $result) {
-                    $ss_player_ids = explode(',', $result->player_ids);
-                    foreach ($ss_player_ids as $ss_player_id) {
-                        if ($ss_player_id == $player_id) {
-                            continue;
-                        }
-                        if (!array_key_exists($ss_player_id, $rel_map)) {
-                            $rel_map[$ss_player_id] = 0;
-                        }
-                        $rel_map[$ss_player_id]++;
-                    }
-                }
-                arsort($rel_map);
-                $rel_map = array_slice($rel_map, 0, $bracket->size + 1, true);
-
-                // Remove any related players below the limit
-                $remove_player_ids = [];
-                foreach ($rel_map as $rel_player_id => $rel_count) {
-                    if ($rel_count < self::MIN_SIMILAR_SNAPSHOTS) {
-                        $remove_player_ids[$rel_player_id] = 1;
-                    }
-                }
-                $rel_map = array_diff_key($rel_map, $remove_player_ids);
-                print_r($rel_map);
-                $rel_player_ids = array_keys($rel_map);
-
-                // Count the number of times each other player gets put on a team
-                // with this player
-                $team_map = [];
-                foreach ($results as $result) {
-                    $team_player_ids = [$player_id];
-                    $ss_player_ids = explode(',', $result->player_ids);
-                    $full = false;
-                    foreach ($rel_player_ids as $rel_player_id) {
-                        if (in_array($rel_player_id, $ss_player_ids)) {
-                            $team_player_ids[] = $rel_player_id;
-                            if (sizeof($team_player_ids) == $bracket->size) {
-                                $full = true;
-                                break;
-                            }
-                        }
-                    }
-                    if ($full) {
-                        foreach ($team_player_ids as $team_player_id) {
-                            if (!array_key_exists($team_player_id, $team_map)) {
-                                $team_map[$team_player_id] = 0;
-                            }
-                            $team_map[$team_player_id]++;
-                        }
-                    }
-                }
-
-                // Remove any team players below the limit
-                $remove_player_ids = [];
-                foreach ($rel_player_ids as $rel_player_id) {
-                    if (!array_key_exists($rel_player_id, $team_map) || $team_map[$rel_player_id] < self::MIN_SIMILAR_SNAPSHOTS) {
-                        $this->line("removed {$rel_player_id} for low team matches.");
-                        $remove_player_ids[] = $rel_player_id;
-                    }
-                }
-                $rel_player_ids = array_diff($rel_player_ids, $remove_player_ids);
-
-                $remove_player_ids = [];
-                foreach ($rel_player_ids as $rel_player_id) {
-                    $rel_player = Player::find($rel_player_id);
-                    if (!$rel_player || $rel_player->faction_id != $player->faction_id) {
-                        $this->line("removed {$rel_player_id} for wrong faction.");
-                        $remove_player_ids[] = $rel_player_id;
-                    }
-                }
-                $rel_player_ids = array_diff($rel_player_ids, $remove_player_ids);
-
-                // Try to determine the team
-                foreach ($results as $result) {
-                    $team_player_ids = [$player_id];
-                    $ss_player_ids = explode(',', $result->player_ids);
-                    $full = false;
-                    foreach ($rel_player_ids as $rel_player_id) {
-                        if (in_array($rel_player_id, $ss_player_ids)) {
-                            $team_player_ids[] = $rel_player_id;
-                            if (sizeof($team_player_ids) == $bracket->size) {
-                                $full = true;
-                                break;
-                            }
-                        }
-                    }
-                    if ($full) {
-                        $this->linkSnapshots($result->leaderboard_id, $team_player_ids);
-                    }
-                }
+            // Find snapshots that need team or comp generated
+            $snapshots = Snapshot::with([
+                    'player',
+                    'group',
+                    'group.leaderboard',
+                    'group.leaderboard.bracket',
+                ])
+                ->whereNull('team_id')
+                ->orWhereNull('group_id')
+                ->get();
+            foreach ($snapshots as $snapshot) {
+                $this->generate($snapshot);
             }
         }
         catch (\Exception $e) {
@@ -219,21 +92,169 @@ class GenerateComps extends Command
     }
 
     /**
-     * @param int   $leaderboard_id
-     * @param array $player_ids
+     * @param Snapshot $snapshot
      */
-    public function linkSnapshots($leaderboard_id, $player_ids)
+    public function generate(Snapshot $main_snapshot)
     {
-        sort($player_ids);
-        $team = Team::getOrBuild($player_ids);
-        $snapshots = Snapshot::where('leaderboard_id', '=', $leaderboard_id)
-            ->whereIn('player_id', $player_ids)
+        $this->info("Snapshot #{$main_snapshot->id} - Player #{$main_snapshot->player_id}");
+
+        if ($main_snapshot->team_id && $main_snapshot->comp_id) {
+            // Has already been determined by another snapshot
+            $this->line("\tAlready determined.");
+            return;
+        }
+
+        $bracket_size = $main_snapshot->group->leaderboard->bracket->size;
+        $timestamp = strtotime($main_snapshot->group->leaderboard->created_at);
+        $min_datetime = date("Y-m-d H:i:s", $timestamp - self::CONSIDER_SNAPSHOTS_WITHIN_SECONDS);
+        $max_datetime = date("Y-m-d H:i:s", $timestamp + self::CONSIDER_SNAPSHOTS_WITHIN_SECONDS);
+
+        // Find the snapshots to consider
+        $snapshot_ids = DB::table('snapshots AS s')
+            ->select('s.id')
+            ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
+            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+            ->where('s.player_id', '=', $main_snapshot->player_id)
+            ->whereRaw("l.created_at > '{$min_datetime}'")
+            ->whereRaw("l.created_at < '{$max_datetime}'")
+            ->pluck('s.id')
+            ->toArray();
+        $this->line("\tFound " . sizeof($snapshot_ids) . " snapshots to consider.");
+        if (!sizeof($snapshot_ids)) {
+            return;
+        }
+        $snapshots = Snapshot::whereIn('id', $snapshot_ids)->get();
+
+        // Find the group IDs to consider
+        $group_ids = [];
+        foreach ($snapshots as $snapshot) {
+            $group_ids[] = $snapshot->group_id;
+        }
+
+        // Find players in the same groups as the considered snapshots and order by occurences
+        $player_data = DB::table('snapshots')
+            ->select([
+                'player_id',
+                DB::raw('COUNT(*) AS num'),
+                DB::raw('0 AS teammate_count'),
+            ])
+            ->whereIn('group_id', $group_ids)
+            ->where('player_id', '!=', $main_snapshot->player_id)
+            ->groupBy('player_id')
+            ->orderBy('num', 'DESC')
+            ->limit($bracket_size + 1)
+            ->having('num', '>', self::MIN_SIMILAR_SNAPSHOTS)
+            ->get()
+            ->toArray();
+        $this->line("\tFound " . sizeof($player_data) . " related players.");
+        if (sizeof($player_data) < $bracket_size - 1) {
+            // Not enough players to make a team
+            return;
+        }
+
+        // Each snapshot for this player should consider only the players in $player_data
+
+        foreach ($snapshots as $snapshot) {
+            $snapshot->team_player_ids = [];
+
+            // Find players that are options for teammates for this snapshot
+            // (should be a subset of $player_data)
+            $related_player_ids = DB::table('snapshots')
+                ->select('player_id')
+                ->where('group_id', '=', $snapshot->group_id)
+                ->where('player_id', '!=', $main_snapshot->player_id)
+                ->pluck('player_id')
+                ->toArray();
+            $team_player_ids = [$main_snapshot->player_id];
+            foreach ($player_data as $data) {
+                if (in_array($data->player_id, $related_player_ids)) {
+                    $team_player_ids[] = $data->player_id;
+                }
+            }
+
+            // $team_player_ids contains the matching player IDs ordered from most occurences to least
+
+            // Trim the team size to the bracket size
+            $team_player_ids = array_slice($team_player_ids, 0, $bracket_size);
+            if (sizeof($team_player_ids) != $bracket_size) {
+                // didn't find enough team members
+                continue;
+            }
+
+
+            // Found enough team members, add teammate count to player data
+            foreach ($player_data as $data) {
+                if (in_array($data->player_id, $team_player_ids)) {
+                    $data->teammate_count++;
+                }
+            }
+
+            // Save the teammate IDs to the snapshot
+            $snapshot->team_player_ids = $team_player_ids;
+        }
+
+        // Now we know how many times each player in $player_data was put on a team with this player.
+        // We can require that each player much have a minimum number of teammate_count in order to
+        // actually be placed on a team.
+
+        // Remove teammates with too few count
+        $remove_keys = [];
+        foreach ($player_data as $k => $data) {
+            if ($data->teammate_count < self::MIN_TEAMMATE_COUNT) {
+                $remove_keys[] = $k;
+            }
+        }
+        $player_data = array_diff_key($player_data, $remove_keys);
+
+        if (sizeof($player_data) < $bracket_size - 1) {
+            // Not enough players to make a team
+        }
+
+        print_r($player_data);
+
+        foreach ($snapshots as $snapshot) {
+            if (!sizeof($snapshot->team_player_ids)) {
+                continue;
+            }
+            $all = true;
+            foreach ($snapshot->team_player_ids as $team_player_id) {
+                if ($team_player_id == $main_snapshot->player_id) {
+                    continue;
+                }
+                $found = false;
+                foreach ($player_data as $data) {
+                    if ($data->player_id == $team_player_id) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $all = false;
+                    break;
+                }
+            }
+            if (!$all) {
+                // Not all team players were valid teammates
+                continue;
+            }
+            $this->build($snapshot, $snapshot->team_player_ids);
+        }
+    }
+
+    /**
+     * @param Snapshot $snapshot
+     * @param array of int $team_player_ids
+     */
+    public function build(Snapshot $snapshot, $team_player_ids)
+    {
+        $team = Team::getOrBuild($team_player_ids);
+        $snapshots = Snapshot::where('group_id', '=', $snapshot->group_id)
+            ->whereIn('player_id', $team_player_ids)
             ->get();
         $spec_ids = [];
         foreach ($snapshots as $snapshot) {
             $spec_ids[] = $snapshot->spec_id;
         }
-        sort($spec_ids);
         $comp = Comp::getOrBuild($spec_ids);
         foreach ($snapshots as $snapshot) {
             $snapshot->team_id = $team->id;

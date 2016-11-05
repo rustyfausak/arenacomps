@@ -3,18 +3,6 @@
 @section('content')
     <h1>{{ $bracket->name }} Leaderboard</h1>
 
-    <ul class="nav nav-tabs">
-        <?php
-        foreach (\App\Models\Bracket::all() as $_bracket) {
-            ?>
-            <li role="presentation" class="{{ $_bracket->id == $bracket->id ? 'active' : '' }}">
-                <a href="{{ route('leaderboard', $_bracket->name) }}">{{ $_bracket->name }}</a>
-            </li>
-            <?php
-        }
-        ?>
-    </ul>
-
     <table class="table table-striped table-bordered table-condensed">
         <thead>
             <tr>

@@ -19,4 +19,14 @@ class Leaderboard extends Model
     {
         return $this->belongsTo('App\Models\Bracket', 'bracket_id', 'id');
     }
+
+    public function season()
+    {
+        return $this->belongsTo('App\Models\Season', 'season_id', 'id');
+    }
+
+    public function term()
+    {
+        return $this->belongsTo('App\Models\Term', 'term_id', 'id');
+    }
 }
