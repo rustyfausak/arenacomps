@@ -237,6 +237,8 @@ class GetLeaderboard extends Command
             'term_id' => $term->id,
         ]);
 
+        $update_stat_ids = [];
+
         foreach ($data['rows'] as $n => $row) {
             $realm = Realm::where('slug', '=', $row['realmSlug'])
                 ->where('region_id', '=', $region->id)
@@ -290,7 +292,7 @@ class GetLeaderboard extends Command
                         'rating' => $row['rating'],
                     ]);
                 }
-                $stat->leaderboard_id = $leaderboard->id;
+                $update_stat_ids[] = $stat->id;
                 $stat->ranking = $row['ranking'];
                 $stat->rating = $row['rating'];
                 $stat->season_wins = $row['seasonWins'];
@@ -313,6 +315,9 @@ class GetLeaderboard extends Command
                 ]);
             }
         }
+
+        Stat::whereIn('id', $update_stat_ids)
+            ->update(['leaderboard_id' => $leaderboard->id]);
 
         $leaderboard->completed_at = date("Y-m-d H:i:s");
         $leaderboard->save();

@@ -1,7 +1,7 @@
 @extends('templates.base')
 
 @section('content')
-    <h1>{{ $bracket->name }} Leaderboard</h1>
+    <h1>Leaderboard</h1>
 
     <table class="table table-striped table-bordered table-condensed">
         <thead>

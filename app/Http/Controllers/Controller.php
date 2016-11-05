@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Session;
 use App\Http\Controllers\OptionsController;
 use Illuminate\Support\Facades\View;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -20,10 +21,21 @@ class Controller extends BaseController
             OptionsController::setBracket($request->input('bracket'));
             OptionsController::setRegion($request->input('region'));
             OptionsController::setTerm($request->input('term'));
-            View::share('bracket', OptionsController::getBracket());
-            View::share('season', OptionsController::getSeason());
-            View::share('term', OptionsController::getTerm());
-            View::share('region', OptionsController::getRegion());
+            $bracket = OptionsController::getBracket();
+            $season = OptionsController::getSeason();
+            $term = OptionsController::getTerm();
+            $region = OptionsController::getRegion();
+            View::share('bracket', $bracket);
+            View::share('season', $season);
+            View::share('term', $term);
+            View::share('region', $region);
+            $params = [
+                'region' => $region ? $region->name : 'all',
+                'season' => $season->id,
+                'bracket_id' => $bracket->name,
+                'term' => $term ? $term->id : 'all',
+            ];
+            View::share('qs', $params);
             return $next($request);
         });
     }

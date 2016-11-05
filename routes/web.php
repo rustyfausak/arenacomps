@@ -11,8 +11,9 @@
 |
 */
 
-Route::get('', ['as' => 'index', 'uses' => 'IndexController@getLeaderboard']);
+Route::get('', ['as' => 'index', 'uses' => 'IndexController@getStats']);
 Route::get('player/{player_id}', ['as' => 'player', 'uses' => 'IndexController@getPlayer']);
+Route::get('stats', ['as' => 'stats', 'uses' => 'IndexController@getStats']);
 Route::get('leaderboard', ['as' => 'leaderboard', 'uses' => 'IndexController@getLeaderboard']);
 Route::get('comps', ['as' => 'comps', 'uses' => 'IndexController@getComps']);
 Route::post('set-options', ['as' => 'set-options', 'uses' => 'IndexController@postSetOptions']);
