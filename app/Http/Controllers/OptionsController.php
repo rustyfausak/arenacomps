@@ -116,16 +116,21 @@ class OptionsController
      */
     public static function setTerm($term_id = null)
     {
+        $season = self::getSeason();
         if ($term_id) {
             if ($term_id == 'all') {
                 Session::put('term_id', 'all');
             }
             else {
                 $term = Term::find($term_id);
-                if ($term) {
+                if ($term && $term->season_id == $season->id) {
                     Session::put('term_id', $term->id);
                 }
             }
+        }
+        $term = Term::find(Session::get('term_id'));
+        if (!$term || $term->season_id != $season->id) {
+            Session::put('term_id', 'all');
         }
         if (!Session::get('term_id')) {
             Session::put('term_id', 'all');

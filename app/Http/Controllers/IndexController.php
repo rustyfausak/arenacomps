@@ -40,16 +40,31 @@ class IndexController extends Controller
      */
     public function getLeaderboard()
     {
+        $season = OptionsController::getSeason();
+        $term = OptionsController::getTerm();
         $bracket = OptionsController::getBracket();
         $region = OptionsController::getRegion();
-        $q = Leaderboard::where('bracket_id', '=', $bracket->id);
+        $regions = [];
         if ($region) {
-            $q->where('region_id', '=', $region->id);
+            $regions[] = $region;
         }
-        $q->whereNotNull('completed_at')
-            ->orderBy('created_at', 'DESC')
-            ->limit(1);
-        $leaderboard_ids = $q->pluck('id')->toArray();
+        else {
+            $regions = Region::all();
+        }
+        $leaderboard_ids = [];
+        foreach ($regions as $region) {
+            $q = Leaderboard::where('bracket_id', '=', $bracket->id)
+                ->where('season_id', '=', $season->id)
+                ->where('region_id', '=', $region->id);
+            if ($term) {
+                $q->where('term_id', '=', $term->id);
+            }
+            $region_leaderboard_ids = $q->whereNotNull('completed_at')
+                ->orderBy('created_at', 'DESC')
+                ->pluck('id')
+                ->toArray();
+            array_push($leaderboard_ids, $region_leaderboard_ids);
+        }
         $stats = Stat::with('player')
             ->whereIn('leaderboard_id', $leaderboard_ids)
             ->orderBy('rating', 'DESC')

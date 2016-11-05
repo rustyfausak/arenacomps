@@ -208,10 +208,12 @@ class InitTables extends Migration
         Schema::create('terms', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
+            $table->integer('season_id')->unsigned();
             $table->string('name');
             $table->date('start_date');
             $table->date('end_date')->nullable()->default(null);
-            $table->unique('name');
+            $table->index('season_id');
+            $table->unique(['name', 'season_id']);
         });
     }
 

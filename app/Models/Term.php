@@ -12,4 +12,9 @@ class Term extends Model
     public $timestamps = false;
     protected $table = 'terms';
     protected $guarded = [];
+
+    public function season()
+    {
+        return $this->belongsTo('App\Models\Season', 'season_id', 'id');
+    }
 }

@@ -38,7 +38,7 @@
                 <div class="form-group">
                     <select name="term" class="form-control" data-submit-on-change>
                         <option value="all">All</option>
-                        @foreach (App\Models\Term::all() as $_term)
+                        @foreach (App\Models\Term::where('season_id', '=', $season->id)->get() as $_term)
                             <option value="{{ $_term->id }}" {{ $term && $_term->id == $term->id ? 'selected="selected"' : '' }}>{{ $_term->name }}</option>
                         @endforeach
                     </select>

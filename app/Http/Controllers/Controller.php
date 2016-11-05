@@ -16,9 +16,9 @@ class Controller extends BaseController
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
+            OptionsController::setSeason($request->input('season'));
             OptionsController::setBracket($request->input('bracket'));
             OptionsController::setRegion($request->input('region'));
-            OptionsController::setSeason($request->input('season'));
             OptionsController::setTerm($request->input('term'));
             View::share('bracket', OptionsController::getBracket());
             View::share('season', OptionsController::getSeason());
