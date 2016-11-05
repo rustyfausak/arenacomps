@@ -88,9 +88,20 @@ class IndexController extends Controller
      */
     public function getComps()
     {
+        $season = OptionsController::getSeason();
+        $term = OptionsController::getTerm();
         $comps = Comp::all();
+        $performances = [];
+        foreach ($comps as $comp) {
+            $performances[] = $comp->getPerformance($season, null, $term);
+        }
+        $sort = [];
+        foreach ($performances as $k => $performance) {
+            $sort[$k] = $performance->skill;
+        }
+        array_multisort($sort, SORT_DESC, $performances);
         return view('comps', [
-            'comps' => $comps,
+            'performances' => $performances,
         ]);
     }
 

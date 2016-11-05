@@ -7,13 +7,10 @@
         <thead>
             <tr>
                 <th>Player</th>
-                <th>Region</th>
                 <th>Realm</th>
-                <th>Faction</th>
                 <th>Race</th>
                 <th>Class</th>
                 <th>Spec</th>
-                <th>Gender</th>
                 <th>Rating</th>
                 <th>Ranking</th>
                 <th>W</th>
@@ -26,13 +23,21 @@
             @foreach ($stats as $stat)
                 <tr>
                     <td><a href="{{ route('player', $stat->player->id) }}">{{ $stat->player->name }}</a></td>
-                    <td>{{ $stat->player->realm->region->name }}</td>
-                    <td>{{ $stat->player->realm->name }}</td>
-                    <td>{{ $stat->player->faction->name }}</td>
-                    <td>{{ $stat->player->race->name }}</td>
-                    <td>{{ $stat->player->role->name }}</td>
-                    <td>{{ $stat->player->spec->name }}</td>
-                    <td>{{ $stat->player->gender->name }}</td>
+                    <td>
+                        @include('icons.region', ['region' => $stat->player->realm->region->name])
+                        {{ $stat->player->realm->name }}
+                    </td>
+                    <td>
+                        @include('icons.race', [
+                            'race' => $stat->player->race->name,
+                            'gender' => $stat->player->gender->name
+                        ])
+                    </td>
+                    <td>@include('icons.role', ['role' => $stat->player->role->name])</td>
+                    <td>@include('icons.spec', [
+                        'role' => $stat->player->role->name,
+                        'spec' => $stat->player->spec->name
+                    ])</td>
                     <td>{{ $stat->rating }}</td>
                     <td>{{ $stat->ranking }}</td>
                     <td>{{ $stat->season_wins }}</td>

@@ -13,6 +13,45 @@ class Performance extends Model
 
     const MAX_AGE_SECONDS = 1;
 
+    public function bracket()
+    {
+        return $this->belongsTo('App\Models\Bracket', 'bracket_id', 'id');
+    }
+
+    public function season()
+    {
+        return $this->belongsTo('App\Models\Season', 'season_id', 'id');
+    }
+
+    public function term()
+    {
+        return $this->belongsTo('App\Models\Term', 'term_id', 'id');
+    }
+
+    public function comp()
+    {
+        return $this->belongsTo('App\Models\Comp', 'comp_id', 'id');
+    }
+
+    public function team()
+    {
+        return $this->belongsTo('App\Models\Team', 'team_id', 'id');
+    }
+
+    /**
+     * @param int $wins
+     * @param int $losses
+     * @return float
+     */
+    public static function getSkill($wins, $losses)
+    {
+        $ratio = $wins;
+        if ($losses) {
+            $ratio = round($wins / $losses, 2);
+        }
+        return max(0, min(10, $ratio)) * min(1, round(($wins + $losses) / 10, 2));
+    }
+
     /**
      * @param Bracket $bracket
      * @param Season  $season
@@ -99,6 +138,7 @@ class Performance extends Model
         $performance->wins = $data['wins'];
         $performance->losses = $data['losses'];
         $performance->avg_rating = $data['avg_rating'];
+        $performance->skill = self::getSkill($data['wins'], $data['losses']);
         $performance->save();
         return $performance;
     }

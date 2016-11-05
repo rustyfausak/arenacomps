@@ -7,22 +7,38 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th colspan="3">Specs</th>
-                <th>Rating</th>
+                <th>Classes</th>
+                <th>Specs</th>
+                <th>OP</th>
+                <th>Avg Rating</th>
                 <th>W</th>
                 <th>L</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($comps as $comp)
-                <?php
-                $performance = $comp->getPerformance($season);
-                ?>
+            @foreach ($performances as $performance)
                 <tr>
-                    <td>{{ $comp->id }}</td>
-                    <td>{{ $comp->spec1->name }} {{ $comp->spec1->role->name }}</td>
-                    <td>{{ $comp->spec2->name }} {{ $comp->spec2->role->name }}</td>
-                    <td>{{ $comp->spec3->name }} {{ $comp->spec3->role->name }}</td>
+                    <td>{{ $performance->comp->id }}</td>
+                    <td>
+                        @include('icons.role', ['role' => $performance->comp->spec1->role->name])
+                        @include('icons.role', ['role' => $performance->comp->spec2->role->name])
+                        @include('icons.role', ['role' => $performance->comp->spec3->role->name])
+                    </td>
+                    <td>
+                        @include('icons.spec', [
+                            'role' => $performance->comp->spec1->role->name,
+                            'spec' => $performance->comp->spec1->name
+                        ])
+                        @include('icons.spec', [
+                            'role' => $performance->comp->spec2->role->name,
+                            'spec' => $performance->comp->spec2->name
+                        ])
+                        @include('icons.spec', [
+                            'role' => $performance->comp->spec3->role->name,
+                            'spec' => $performance->comp->spec3->name
+                        ])
+                    </td>
+                    <td>{{ $performance->skill }}</td>
                     <td>{{ $performance->avg_rating }}</td>
                     <td>{{ $performance->wins }}</td>
                     <td>{{ $performance->losses }}</td>

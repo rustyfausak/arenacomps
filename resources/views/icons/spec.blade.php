@@ -1,0 +1,1 @@
+<img class="wowicon wowicon-spec" src="{{ url('icons/specs/' . ucfirst(strtolower(str_replace(' ', '', $role))) . '-' . ucfirst(strtolower(str_replace(' ', '', $spec))) . '.jpg') }}" title="{{ $spec . ' ' . $role }}">

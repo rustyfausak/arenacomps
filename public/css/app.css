@@ -5766,4 +5766,16 @@ button.close {
   .hidden-print {
     display: none !important; } }
 
+.wowicon {
+  max-height: 20px;
+  max-width: 20px;
+  border-radius: 2px; }
+
+td .wowicon {
+  margin-top: -4px;
+  margin-bottom: -2px; }
+
+.regionicon {
+  vertical-align: bottom; }
+
 /*# sourceMappingURL=app.css.map */
