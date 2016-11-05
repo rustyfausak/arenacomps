@@ -16,7 +16,7 @@
         <tbody>
             @foreach ($comps as $comp)
                 <?php
-                $performance = $comp->getPerformance();
+                $performance = $comp->getPerformance($season);
                 ?>
                 <tr>
                     <td>{{ $comp->id }}</td>
