@@ -63,7 +63,7 @@ class IndexController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->pluck('id')
                 ->toArray();
-            array_push($leaderboard_ids, $region_leaderboard_ids);
+            $leaderboard_ids = array_merge($leaderboard_ids, $region_leaderboard_ids);
         }
         $stats = Stat::with('player')
             ->whereIn('leaderboard_id', $leaderboard_ids)
