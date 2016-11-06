@@ -11,6 +11,7 @@ use App\Models\Comp;
 use App\Models\Faction;
 use App\Models\Gender;
 use App\Models\Leaderboard;
+use App\Models\Performance;
 use App\Models\Player;
 use App\Models\Race;
 use App\Models\Realm;
@@ -95,18 +96,30 @@ class IndexController extends Controller
      */
     public function getComps()
     {
+        $region = OptionsController::getRegion();
+        $bracket = OptionsController::getBracket();
         $season = OptionsController::getSeason();
         $term = OptionsController::getTerm();
-        $comps = Comp::all();
-        $performances = [];
-        foreach ($comps as $comp) {
-            $performances[] = $comp->getPerformance($season, null, $term);
+        $q = Performance::where('bracket_id', '=', $bracket->id)
+            ->where('season_id', '=', $season->id)
+            ->whereNotNull('comp_id');
+        if ($region) {
+            $q->where('region_id', '=', $region->id);
         }
-        $sort = [];
-        foreach ($performances as $k => $performance) {
-            $sort[$k] = $performance->skill;
+        else {
+            $q->whereNull('region_id');
         }
-        array_multisort($sort, SORT_DESC, $performances);
+        if ($term) {
+            $q->where('term_id', '=', $term->id);
+        }
+        else {
+            $q->whereNull('term_id');
+        }
+        $performances = $q->orderBy('skill', 'DESC')
+            ->orderBy('wins', 'DESC')
+            ->orderBy('losses', 'ASC')
+            ->orderBy('avg_rating', 'DESC')
+            ->paginate(20);
         return view('comps', [
             'performances' => $performances,
         ]);

@@ -11,7 +11,7 @@ class Performance extends Model
     protected $table = 'performance';
     protected $guarded = [];
 
-    const MAX_AGE_SECONDS = 1;
+    const MAX_AGE_SECONDS = 60 * 60;
 
     public function bracket()
     {
@@ -55,6 +55,7 @@ class Performance extends Model
     /**
      * @param Bracket $bracket
      * @param Season  $season
+     * @param Region  $region
      * @param Team    $team
      * @param Comp    $comp
      * @param Term    $term
@@ -63,6 +64,7 @@ class Performance extends Model
     public static function build(
         Bracket $bracket,
         Season $season,
+        Region $region = null,
         Team $team = null,
         Comp $comp = null,
         Term $term = null
@@ -72,14 +74,29 @@ class Performance extends Model
         }
         $q = self::where('bracket_id', '=', $bracket->id)
             ->where('season_id', '=', $season->id);
+        if ($region) {
+            $q->where('region_id', '=', $region->id);
+        }
+        else {
+            $q->whereNull('region_id');
+        }
         if ($team) {
             $q->where('team_id', '=', $team->id);
+        }
+        else {
+            $q->whereNull('team_id');
         }
         if ($comp) {
             $q->where('comp_id', '=', $comp->id);
         }
+        else {
+            $q->whereNull('comp_id');
+        }
         if ($term) {
             $q->where('term_id', '=', $term->id);
+        }
+        else {
+            $q->whereNull('term_id');
         }
         $performance = $q->first();
         if ($performance) {
@@ -91,6 +108,7 @@ class Performance extends Model
             $performance = self::create([
                 'bracket_id' => $bracket->id,
                 'season_id' => $season->id,
+                'region_id' => $region ? $region->id : null,
                 'team_id' => $team ? $team->id : null,
                 'comp_id' => $comp ? $comp->id : null,
                 'term_id' => $term ? $term->id : null,
@@ -115,6 +133,9 @@ class Performance extends Model
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
             ->where('l.bracket_id', '=', $bracket->id)
             ->where('l.season_id', '=', $season->id);
+        if ($region) {
+            $q->where('l.region_id', '=', $region->id);
+        }
         if ($term) {
             $q->where('l.term_id', '=', $term->id);
         }

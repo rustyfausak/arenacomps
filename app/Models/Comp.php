@@ -41,14 +41,23 @@ class Comp extends Model
     }
 
     /**
+     * @return array of Spec
+     */
+    public function getSpecs()
+    {
+        return array_filter([$this->spec1, $this->spec2, $this->spec3, $this->spec4, $this->spec5]);
+    }
+
+    /**
      * @param Season  $season
+     * @param Region  $region
      * @param Team    $team
      * @param Term    $term
      * @return array
      */
-    public function getPerformance(Season $season, Team $team = null, Term $term = null)
+    public function getPerformance(Season $season, Region $region = null, Team $team = null, Term $term = null)
     {
         $bracket = Bracket::where('size', '=', $this->getSize())->first();
-        return Performance::build($bracket, $season, $team, $this, $term);
+        return Performance::build($bracket, $season, $region, $team, $this, $term);
     }
 }

@@ -15,8 +15,7 @@
                             <tr>
                                 <td class="text-right">{{ $row->ranking }}</td>
                                 <td>
-                                    @include('icons.role', ['role' => $row->role_name])
-                                    <span class="color-{{ strtolower(str_replace(' ', '', $row->role_name)) }}">{{ $row->role_name }}</span>
+                                    @include('snippets.role', ['role' => $row->role_name])
                                 </td>
                                 <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
                                 <td class="text-right">{{ $row->num }}</td>
@@ -37,15 +36,13 @@
                             <tr>
                                 <td class="text-right">{{ $row->ranking }}</td>
                                 <td>
-                                    @include('icons.role', ['role' => $row->role_name])
-                                    <span class="color-{{ strtolower(str_replace(' ', '', $row->role_name)) }}">{{ $row->role_name }}</span>
+                                    @include('snippets.role', ['role' => $row->role_name])
                                 </td>
                                 <td>
-                                    @include('icons.spec', [
+                                    @include('snippets.spec', [
                                         'role' => $row->role_name,
                                         'spec' => $row->spec_name
                                     ])
-                                    <span class="color-{{ strtolower(str_replace(' ', '', $row->role_name)) }}">{{ $row->spec_name }}</span>
                                 </td>
                                 <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
                                 <td class="text-right">{{ $row->num }}</td>
@@ -66,11 +63,10 @@
                             <tr>
                                 <td class="text-right">{{ $row->ranking }}</td>
                                 <td>
-                                    @include('icons.race', [
+                                    @include('snippets.race', [
                                         'race' => $row->race_name,
                                         'gender' => null,
                                     ])
-                                    <span>{{ $row->race_name }}</span>
                                 </td>
                                 <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
                                 <td class="text-right">{{ $row->num }}</td>

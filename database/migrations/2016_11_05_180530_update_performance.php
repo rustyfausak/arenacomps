@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddSkillToPerformance extends Migration
+class UpdatePerformance extends Migration
 {
     /**
      * Run the migrations.
@@ -15,6 +15,8 @@ class AddSkillToPerformance extends Migration
     {
         Schema::table('performance', function ($table) {
             $table->float('skill', 4, 2)->default(0);
+            $table->integer('region_id')->unsigned()->nullable()->default(null)->after('season_id');
+            $table->index('region_id');
         });
     }
 
@@ -27,6 +29,8 @@ class AddSkillToPerformance extends Migration
     {
         Schema::table('performance', function ($table) {
             $table->dropColumn('skill');
+            $table->dropIndex(['region_id']);
+            $table->dropColumn('region_id');
         });
     }
 }

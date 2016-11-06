@@ -9,8 +9,7 @@
                 <th>Player</th>
                 <th>Realm</th>
                 <th>Race</th>
-                <th>Class</th>
-                <th>Spec</th>
+                <th>Class/Spec</th>
                 <th>Rating</th>
                 <th>Ranking</th>
                 <th>W</th>
@@ -28,16 +27,17 @@
                         {{ $stat->player->realm->name }}
                     </td>
                     <td>
-                        @include('icons.race', [
+                        @include('snippets.race', [
                             'race' => $stat->player->race->name,
                             'gender' => $stat->player->gender->name
                         ])
                     </td>
-                    <td>@include('icons.role', ['role' => $stat->player->role->name])</td>
-                    <td>@include('icons.spec', [
-                        'role' => $stat->player->role->name,
-                        'spec' => $stat->player->spec->name
-                    ])</td>
+                    <td>
+                        @include('snippets.role-spec', [
+                            'role' => $stat->player->role->name,
+                            'spec' => $stat->player->spec->name
+                        ])
+                    </td>
                     <td>{{ $stat->rating }}</td>
                     <td>{{ $stat->ranking }}</td>
                     <td>{{ $stat->season_wins }}</td>

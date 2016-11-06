@@ -24,4 +24,20 @@ class Spec extends Model
     {
         return $this->name;
     }
+
+    /**
+     * @param array of Spec $specs
+     * @return array
+     */
+    public static function sort(array $specs = [])
+    {
+        $sort1 = [];
+        $sort2 = [];
+        foreach ($specs as $k => $spec) {
+            $sort1[$k] = $spec->spec_type_id;
+            $sort2[$k] = $spec->name;
+        }
+        array_multisort($sort1, SORT_DESC, $sort2, SORT_DESC, $specs);
+        return $specs;
+    }
 }

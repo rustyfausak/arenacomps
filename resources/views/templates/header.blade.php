@@ -6,9 +6,9 @@
             </a>
         </div>
         <ul class="nav navbar-nav">
-            <li><a href="{{ route('stats', $qs) }}">Stats</a></li>
-            <li><a href="{{ route('leaderboard', $qs) }}">Leaderboard</a></li>
-            <li><a href="{{ route('comps', $qs) }}">Comps</a></li>
+            <li><a href="{{ route('stats') }}">Stats</a></li>
+            <li><a href="{{ route('leaderboard') }}">Leaderboard</a></li>
+            <li><a href="{{ route('comps') }}">Comps</a></li>
         </ul>
         <form action="" method="get" class="navbar-form navbar-left">
             <div class="form-group">

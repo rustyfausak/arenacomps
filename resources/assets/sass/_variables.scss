@@ -42,3 +42,6 @@ $pagination-bg: $table-bg-accent;
 $pagination-border: $table-border-color;
 $pagination-disabled-border: $table-border-color;
 $pagination-disabled-bg: #1A1A1A;
+$pagination-hover-color: #fff;
+$pagination-hover-bg: darken($brand-primary, 10%);
+$pagination-hover-border: lighten($brand-primary, 20%);

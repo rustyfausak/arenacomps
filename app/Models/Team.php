@@ -54,13 +54,14 @@ class Team extends Model
 
     /**
      * @param Season  $season
+     * @param Region  $region
      * @param Comp    $comp
      * @param Term    $term
      * @return array
      */
-    public function getPerformance(Season $season, Comp $comp = null, Term $term = null)
+    public function getPerformance(Season $season, Region $region = null, Comp $comp = null, Term $term = null)
     {
         $bracket = Bracket::where('size', '=', $this->getSize())->first();
-        return Performance::build($bracket, $season, $this, $comp, $term);
+        return Performance::build($bracket, $season, $region, $this, $comp, $term);
     }
 }

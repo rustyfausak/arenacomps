@@ -1,8 +1,8 @@
 @extends('templates.base')
 
-@section('content')
-    <h1>{{ $player->name }}</h1>
+@section('page-title', $player->name)
 
+@section('content')
     <div class="row">
         <div class="col-sm-3">
             <div class="panel panel-default">
@@ -11,12 +11,27 @@
                 </div>
                 <table class="table table-condensed">
                     <tbody>
+                        <tr><th>Region</th><td>{{ $player->realm->region->name }}</td></tr>
                         <tr><th>Realm</th><td>{{ $player->realm->name }}</td></tr>
                         <tr><th>Faction</th><td>{{ $player->faction->name }}</td></tr>
-                        <tr><th>Race</th><td>{{ $player->race->name }}</td></tr>
-                        <tr><th>Class</th><td>{{ $player->role->name }}</td></tr>
-                        <tr><th>Spec</th><td>{{ $player->spec->name }}</td></tr>
-                        <tr><th>Gender</th><td>{{ $player->gender->name }}</td></tr>
+                        <tr>
+                            <th>Race</th>
+                            <td>
+                                @include('snippets.race', [
+                                    'race' => $player->race->name ,
+                                    'gender' => $player->gender->name
+                                ])
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Class/Spec</th>
+                            <td>
+                                @include('snippets.role-spec', [
+                                    'role' => $player->role->name,
+                                    'spec' => $player->spec->name
+                                ])
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -25,7 +40,7 @@
             <div class="col-sm-3">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        {{ $stat->bracket->name }} Stats
+                        Stats
                     </div>
                     <table class="table table-condensed">
                         <tbody>
@@ -59,31 +74,55 @@
             <tbody>
                 @foreach ($player->getTeams() as $team)
                     <?php
-                    $performance = $team->getPerformance($season, null, $term);
+                    $performance = $team->getPerformance($season, $region, null, $term);
+                    $comps = $team->getComps();
+                    $num_comps = sizeof($comps);
+                    $comp = $comps->shift();
+                    $comp_performance = $comp->getPerformance($season, $region, $team, $term);
                     ?>
                     <tr>
                         <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
                         <td><a href="{{ route('player', $team->player_id2) }}">{{ $team->player2->name }}</a></td>
                         <td><a href="{{ route('player', $team->player_id3) }}">{{ $team->player3->name }}</a></td>
-                        <td colspan="3">All</td>
-                        <td>{{ $performance->avg_rating }}</td>
-                        <td>{{ $performance->wins }}</td>
-                        <td>{{ $performance->losses }}</td>
+                        @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
+                            <td>
+                                @include('snippets.role-spec', [
+                                    'role' => $spec->role->name,
+                                    'spec' => $spec->name
+                                ])
+                            </td>
+                        @endforeach
+                        <td>{{ $comp_performance->avg_rating }}</td>
+                        <td>{{ $comp_performance->wins }}</td>
+                        <td>{{ $comp_performance->losses }}</td>
                     </tr>
-                    @foreach ($team->getComps() as $comp)
+                    @foreach ($comps as $comp)
                         <?php
-                        $comp_performance = $comp->getPerformance($season, $team, $term);
+                        $comp_performance = $comp->getPerformance($season, $region, $team, $term);
                         ?>
                         <tr>
                             <td colspan="3"></td>
-                            <td>{{ $comp->spec1->name }} {{ $comp->spec1->role->name }}</td>
-                            <td>{{ $comp->spec2->name }} {{ $comp->spec2->role->name }}</td>
-                            <td>{{ $comp->spec3->name }} {{ $comp->spec3->role->name }}</td>
+                            @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
+                                <td>
+                                    @include('snippets.role-spec', [
+                                        'role' => $spec->role->name,
+                                        'spec' => $spec->name
+                                    ])
+                                </td>
+                            @endforeach
                             <td>{{ $comp_performance->avg_rating }}</td>
                             <td>{{ $comp_performance->wins }}</td>
                             <td>{{ $comp_performance->losses }}</td>
                         </tr>
                     @endforeach
+                    @if ($num_comps > 1)
+                        <tr>
+                            <td colspan="6" class="text-right">Total</td>
+                            <td>{{ $performance->avg_rating }}</td>
+                            <td>{{ $performance->wins }}</td>
+                            <td>{{ $performance->losses }}</td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
