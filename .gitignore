@@ -8,5 +8,7 @@ Homestead.yaml
 .env
 bootstrap/cache/
 public/storage/
+public/js
+public/css
 *.sublime-project
 *.sublime-workspace
