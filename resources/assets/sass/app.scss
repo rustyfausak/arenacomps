@@ -32,7 +32,7 @@ td .wowicon {
 }
 
 .page-header-bar {
-    background-color: #262626;
+    background-color: $body-bg-light;
     margin-bottom: 20px;
     padding: 20px;
 
@@ -42,7 +42,7 @@ td .wowicon {
     }
 }
 
-$footer-bg: #1A1A1A;
+$footer-bg: $body-bg-dark;
 
 .footer {
     background-color: $footer-bg;
@@ -54,4 +54,13 @@ $footer-bg: #1A1A1A;
     a {
         color: #777;
     }
+}
+
+$alert-border-color: lighten($table-border-color, 10%);
+
+.alert {
+    border-left-width: 3px;
+    border-right-color: $alert-border-color;
+    border-top-color: $alert-border-color;
+    border-bottom-color: $alert-border-color;
 }

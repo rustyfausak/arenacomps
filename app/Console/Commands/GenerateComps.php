@@ -100,7 +100,6 @@ class GenerateComps extends Command
 
         if ($main_snapshot->team_id && $main_snapshot->comp_id) {
             // Has already been determined by another snapshot
-            $this->line("\tAlready determined.");
             return;
         }
 
@@ -119,7 +118,7 @@ class GenerateComps extends Command
             ->whereRaw("l.created_at < '{$max_datetime}'")
             ->pluck('s.id')
             ->toArray();
-        $this->line("\tFound " . sizeof($snapshot_ids) . " snapshots to consider.");
+        //$this->line("\tFound " . sizeof($snapshot_ids) . " snapshots to consider.");
         if (!sizeof($snapshot_ids)) {
             return;
         }
@@ -146,7 +145,7 @@ class GenerateComps extends Command
             ->having('num', '>', self::MIN_SIMILAR_SNAPSHOTS)
             ->get()
             ->toArray();
-        $this->line("\tFound " . sizeof($player_data) . " related players.");
+        //$this->line("\tFound " . sizeof($player_data) . " related players.");
         if (sizeof($player_data) < $bracket_size - 1) {
             // Not enough players to make a team
             return;
@@ -208,9 +207,8 @@ class GenerateComps extends Command
 
         if (sizeof($player_data) < $bracket_size - 1) {
             // Not enough players to make a team
+            return;
         }
-
-        print_r($player_data);
 
         foreach ($snapshots as $snapshot) {
             if (!sizeof($snapshot->team_player_ids)) {

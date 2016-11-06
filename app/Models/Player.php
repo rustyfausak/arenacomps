@@ -51,14 +51,31 @@ class Player extends Model
     }
 
     /**
-     * @return Collection
+     * @param Bracket $bracket
+     * @return Collection of Team
      */
-    public function getTeams()
+    public function getTeams(Bracket $bracket)
     {
-        return Team::where('player_id1', '=', $this->id)
-            ->orWhere('player_id2', '=', $this->id)
-            ->orWhere('player_id3', '=', $this->id)
-            ->get();
+        $q = Team::whereRaw(1);
+        $cols = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $key = 'player_id' . $i;
+            if ($i > $bracket->size) {
+                $q->whereNull($key);
+            }
+            else {
+                $q->whereNotNull($key);
+                $cols[] = $key;
+            }
+        }
+        $player_id = $this->id;
+        $q->where(function ($q) use ($cols, $player_id) {
+            $q->whereRaw(0);
+            foreach ($cols as $col) {
+                $q->orWhere($col, '=', $player_id);
+            }
+        });
+        return $q->get();
     }
 
     /**

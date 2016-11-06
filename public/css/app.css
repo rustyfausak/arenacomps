@@ -4076,7 +4076,7 @@ tbody.collapse.in {
     z-index: 2;
     color: #fff;
     background-color: #1d7bba;
-    border-color: #84c2ec; }
+    border-color: #58ade5; }
   .pagination > .active > a, .pagination > .active > a:hover, .pagination > .active > a:focus,
   .pagination > .active > span,
   .pagination > .active > span:hover,
@@ -4361,13 +4361,13 @@ a.thumbnail.active {
     color: #245269; }
 
 .alert-warning {
-  background-color: #fcf8e3;
+  background-color: transparent;
   border-color: #faebcc;
-  color: #8a6d3b; }
+  color: #ae894a; }
   .alert-warning hr {
     border-top-color: #f7e1b5; }
   .alert-warning .alert-link {
-    color: #66512c; }
+    color: #8a6d3b; }
 
 .alert-danger {
   background-color: #f2dede;
@@ -5836,5 +5836,11 @@ td .wowicon {
   box-shadow: 0px 500px 0px 500px #1A1A1A; }
   .footer a {
     color: #777; }
+
+.alert {
+  border-left-width: 3px;
+  border-right-color: #474747;
+  border-top-color: #474747;
+  border-bottom-color: #474747; }
 
 /*# sourceMappingURL=app.css.map */

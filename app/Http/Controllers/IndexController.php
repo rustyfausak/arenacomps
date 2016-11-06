@@ -33,8 +33,21 @@ class IndexController extends Controller
         if (!$player) {
             return redirect()->route('index');
         }
+        $region = OptionsController::getRegion();
+        $bracket = OptionsController::getBracket();
+        $q = Stat::where('player_id', '=', $player->id)
+            ->where('bracket_id', '=', $bracket->id);
+        if ($region) {
+            $region_id = $region->id;
+            $q->whereHas('leaderboard', function ($q) use ($region_id) {
+                $q->where('region_id', '=', $region_id);
+            });
+        }
+        $stat = $q->first();
         return view('player', [
-            'player' => $player
+            'player' => $player,
+            'stat' => $stat,
+            'region' => OptionsController::getRegion()
         ]);
     }
 

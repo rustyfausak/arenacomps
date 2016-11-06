@@ -7,7 +7,7 @@
         <thead>
             <tr>
                 <th colspan="3">Comp</th>
-                <th>OP Value</th>
+                <th>Power</th>
                 <th>Avg Rating</th>
                 <th>W</th>
                 <th>L</th>

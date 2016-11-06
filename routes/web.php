@@ -11,7 +11,7 @@
 |
 */
 
-Route::get('', ['as' => 'index', 'uses' => 'IndexController@getStats']);
+Route::get('', ['as' => 'index', 'uses' => 'IndexController@getComps']);
 Route::get('player/{player_id}', ['as' => 'player', 'uses' => 'IndexController@getPlayer']);
 Route::get('stats', ['as' => 'stats', 'uses' => 'IndexController@getStats']);
 Route::get('leaderboard', ['as' => 'leaderboard', 'uses' => 'IndexController@getLeaderboard']);

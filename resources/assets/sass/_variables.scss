@@ -5,6 +5,8 @@ $brand-success: #5cb85c !default;
 // Scaffolding
 $body-bg: #212121;
 $text-color: #fff;
+$body-bg-light: #262626;
+$body-bg-dark: #1A1A1A;
 
 // Typography
 $font-family-sans-serif: "Roboto", sans-serif;
@@ -16,7 +18,7 @@ $table-bg-accent: #242424;
 $table-border-color: #2d2d2d;
 
 // Panels
-$panel-bg: #1A1A1A;
+$panel-bg: $body-bg-dark;
 $panel-default-heading-bg: #282828;
 $panel-default-text: #fff;
 $panel-default-border: #333;
@@ -24,7 +26,7 @@ $panel-default-border: #333;
 // Navbar
 $navbar-border-radius: 0;
 $navbar-inverse-color: #fff;
-$navbar-inverse-bg: #1A1A1A;
+$navbar-inverse-bg: $body-bg-dark;
 $navbar-inverse-border: #282828;
 $navbar-margin-bottom: 0;
 $navbar-inverse-link-color: #fff;
@@ -41,7 +43,11 @@ $input-color: #eee;
 $pagination-bg: $table-bg-accent;
 $pagination-border: $table-border-color;
 $pagination-disabled-border: $table-border-color;
-$pagination-disabled-bg: #1A1A1A;
+$pagination-disabled-bg: $body-bg-dark;
 $pagination-hover-color: #fff;
 $pagination-hover-bg: darken($brand-primary, 10%);
-$pagination-hover-border: lighten($brand-primary, 20%);
+$pagination-hover-border: lighten($brand-primary, 10%);
+
+// Alerts
+$alert-warning-bg: transparent;
+$alert-warning-text: lighten(#8a6d3b, 10%);

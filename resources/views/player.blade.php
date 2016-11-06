@@ -36,7 +36,7 @@
                 </table>
             </div>
         </div>
-        @foreach ($player->stats as $stat)
+        @if ($stat)
             <div class="col-sm-3">
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -54,54 +54,41 @@
                     </table>
                 </div>
             </div>
-        @endforeach
+        @endif
     </div>
 
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            Teams
+    @if ($region && $player->realm->region->id != $region->id)
+        <div class="alert alert-warning">
+            Player from different region
         </div>
-        <table class="table table-striped table-bordered table-condensed">
-            <thead>
-                <tr>
-                    <th colspan="3">Players</th>
-                    <th colspan="3">Comp</th>
-                    <th>Rating</th>
-                    <th>W</th>
-                    <th>L</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($player->getTeams() as $team)
-                    <?php
-                    $performance = $team->getPerformance($season, $region, null, $term);
-                    $comps = $team->getComps();
-                    $num_comps = sizeof($comps);
-                    $comp = $comps->shift();
-                    $comp_performance = $comp->getPerformance($season, $region, $team, $term);
-                    ?>
+    @else
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Teams
+            </div>
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
                     <tr>
-                        <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
-                        <td><a href="{{ route('player', $team->player_id2) }}">{{ $team->player2->name }}</a></td>
-                        <td><a href="{{ route('player', $team->player_id3) }}">{{ $team->player3->name }}</a></td>
-                        @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
-                            <td>
-                                @include('snippets.role-spec', [
-                                    'role' => $spec->role->name,
-                                    'spec' => $spec->name
-                                ])
-                            </td>
-                        @endforeach
-                        <td>{{ $comp_performance->avg_rating }}</td>
-                        <td>{{ $comp_performance->wins }}</td>
-                        <td>{{ $comp_performance->losses }}</td>
+                        <th colspan="3">Players</th>
+                        <th colspan="3">Comp</th>
+                        <th>Rating</th>
+                        <th>W</th>
+                        <th>L</th>
                     </tr>
-                    @foreach ($comps as $comp)
+                </thead>
+                <tbody>
+                    @foreach ($player->getTeams($bracket) as $team)
                         <?php
+                        $performance = $team->getPerformance($season, $region, null, $term);
+                        $comps = $team->getComps();
+                        $num_comps = sizeof($comps);
+                        $comp = $comps->shift();
                         $comp_performance = $comp->getPerformance($season, $region, $team, $term);
                         ?>
                         <tr>
-                            <td colspan="3"></td>
+                            <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
+                            <td><a href="{{ route('player', $team->player_id2) }}">{{ $team->player2->name }}</a></td>
+                            <td><a href="{{ route('player', $team->player_id3) }}">{{ $team->player3->name }}</a></td>
                             @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
                                 <td>
                                     @include('snippets.role-spec', [
@@ -114,17 +101,36 @@
                             <td>{{ $comp_performance->wins }}</td>
                             <td>{{ $comp_performance->losses }}</td>
                         </tr>
+                        @foreach ($comps as $comp)
+                            <?php
+                            $comp_performance = $comp->getPerformance($season, $region, $team, $term);
+                            ?>
+                            <tr>
+                                <td colspan="3"></td>
+                                @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
+                                    <td>
+                                        @include('snippets.role-spec', [
+                                            'role' => $spec->role->name,
+                                            'spec' => $spec->name
+                                        ])
+                                    </td>
+                                @endforeach
+                                <td>{{ $comp_performance->avg_rating }}</td>
+                                <td>{{ $comp_performance->wins }}</td>
+                                <td>{{ $comp_performance->losses }}</td>
+                            </tr>
+                        @endforeach
+                        @if ($num_comps > 1)
+                            <tr>
+                                <td colspan="6" class="text-right">Total</td>
+                                <td>{{ $performance->avg_rating }}</td>
+                                <td>{{ $performance->wins }}</td>
+                                <td>{{ $performance->losses }}</td>
+                            </tr>
+                        @endif
                     @endforeach
-                    @if ($num_comps > 1)
-                        <tr>
-                            <td colspan="6" class="text-right">Total</td>
-                            <td>{{ $performance->avg_rating }}</td>
-                            <td>{{ $performance->wins }}</td>
-                            <td>{{ $performance->losses }}</td>
-                        </tr>
-                    @endif
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
+    @endif
 @endsection
