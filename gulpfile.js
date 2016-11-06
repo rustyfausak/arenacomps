@@ -16,5 +16,5 @@ require('laravel-elixir-vue-2');
 elixir((mix) => {
     mix.sass('app.scss')
        .webpack('app.js')
-       .copy('resources/assets/icons', 'public/icons');
+       .copy('resources/assets/icons', 'public/img/icons');
 });
