@@ -110,15 +110,27 @@ class IndexController extends Controller
 
     /**
      */
-    public function getLeaderboard()
+    public function getLeaderboard(Request $request)
     {
+        $role = null;
+        if ($request->input('class')) {
+            $role = Role::find($request->input('class'));
+        }
         $leaderboard_ids = $this->_getLeaderboardIds();
-        $stats = Stat::with('player')
+        $q = Stat::with('player')
             ->whereIn('leaderboard_id', $leaderboard_ids)
-            ->orderBy('rating', 'DESC')
-            ->paginate(20);
+            ->orderBy('rating', 'DESC');
+        if ($role) {
+            $role_id = $role->id;
+            $q->whereHas('player', function ($q) use ($role_id) {
+                $q->where('role_id', '=', $role_id);
+            });
+        }
+        $stats = $q->paginate(20);
+
         return view('leaderboard', [
             'stats' => $stats,
+            'role' => $role
         ]);
     }
 
@@ -166,12 +178,31 @@ class IndexController extends Controller
 
     /**
      */
-    public function getComps()
+    public function getComps(Request $request)
     {
         $region = OptionsController::getRegion();
         $bracket = OptionsController::getBracket();
         $season = OptionsController::getSeason();
         $term = OptionsController::getTerm();
+
+        $roles = array_fill(0, $bracket->size, null);
+        $specs = array_fill(0, $bracket->size, null);
+
+        foreach ($request->all() as $k => $v) {
+            if (preg_match('/^class(\d+)$/', $k, $m)) {
+                $role = Role::find($v);
+                if ($role) {
+                    $roles[$m[1] - 1] = $role;
+                }
+            }
+            if (preg_match('/^spec(\d+)$/', $k, $m)) {
+                $spec = Spec::find($v);
+                if ($spec) {
+                    $specs[$m[1] - 1] = $spec;
+                }
+            }
+        }
+
         $q = Performance::where('bracket_id', '=', $bracket->id)
             ->where('season_id', '=', $season->id)
             ->whereNotNull('comp_id');
@@ -194,6 +225,9 @@ class IndexController extends Controller
             ->paginate(20);
         return view('comps', [
             'performances' => $performances,
+            'roles' => $roles,
+            'specs' => $specs,
+            'bracket_size' => $bracket->size,
         ]);
     }
 

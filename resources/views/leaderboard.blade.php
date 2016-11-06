@@ -2,6 +2,21 @@
 
 @section('page-title', 'Leaderboard')
 
+@section('page-header-bar')
+    <hr>
+    <form action="" method="get" class="form-inline">
+        <div class="form-group">
+            <label for="class">Class</label>
+            <select name="class" id="class" class="form-control" data-submit-on-change>
+                <option value="any">Any</option>
+                @foreach (App\Models\Role::all() as $_role)
+                    <option class="color-{{ strtolower(str_replace(' ', '', $_role->name)) }}" value="{{ $_role->id }}" {{ $role && $_role->id == $role->id ? 'selected="selected"' : '' }}>{{ $_role->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    </form>
+@endsection
+
 @section('content')
     <table class="table table-striped table-bordered table-condensed">
         <thead>

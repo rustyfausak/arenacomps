@@ -28,4 +28,17 @@ $(document).ready(function () {
     $('[data-submit-on-change]').on('change', function () {
         $(this).parents('form').submit();
     });
+    $('[data-waterfall-to]').on('change', function () {
+        var target = $($(this).attr('data-waterfall-to'));
+        var val = $(this).find('option:selected').attr('data-waterfall-value');
+        if (val) {
+            target.show();
+            target.find('option[data-waterfall-value]').hide();
+            target.find('option[data-waterfall-value="' + val + '"]').show();
+        }
+        else {
+            target.hide();
+        }
+    });
+    $('[data-waterfall-to]').trigger('change');
 });

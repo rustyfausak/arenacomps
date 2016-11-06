@@ -67,3 +67,9 @@ $alert-border-color: lighten($table-border-color, 10%);
     border-top-color: $alert-border-color;
     border-bottom-color: $alert-border-color;
 }
+
+.form-group-bubble {
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}

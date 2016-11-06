@@ -1,6 +1,16 @@
 @extends('templates.base')
 
-@section('page-title', 'Stats')
+@section('page-title')
+    Stats
+    <small>
+        stats for the top 5000 players
+        @if ($region)
+            in {{ strtoupper($region->name) }}
+        @else
+            in all regions
+        @endif
+    </small>
+@endsection
 
 @section('content')
     <div class="row">
@@ -15,7 +25,9 @@
                             <tr>
                                 <td class="text-right">{{ $row->ranking }}</td>
                                 <td>
-                                    @include('snippets.role', ['role' => $row->role_name])
+                                    <a href="{{ route('leaderboard', ['class' => $row->role_id]) }}">
+                                        @include('snippets.role', ['role' => $row->role_name])
+                                    </a>
                                 </td>
                                 <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
                                 <td class="text-right">{{ $row->num }}</td>
