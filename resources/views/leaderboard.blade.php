@@ -1,8 +1,8 @@
 @extends('templates.base')
 
-@section('content')
-    <h1>Leaderboard</h1>
+@section('page-title', 'Leaderboard')
 
+@section('content')
     <table class="table table-striped table-bordered table-condensed">
         <thead>
             <tr>

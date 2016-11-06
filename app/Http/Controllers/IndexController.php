@@ -86,6 +86,13 @@ class IndexController extends Controller
 
     /**
      */
+    public function getTest()
+    {
+        return view('test');
+    }
+
+    /**
+     */
     public function getComps()
     {
         $season = OptionsController::getSeason();

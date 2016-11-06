@@ -1,8 +1,8 @@
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
+<nav class="navbar navbar-inverse navbar-default">
+    <div class="container">
         <div class="navbar-header">
             <a class="navbar-brand" href="{{ route('index') }}">
-                AC
+                arenacomps
             </a>
         </div>
         <ul class="nav navbar-nav">

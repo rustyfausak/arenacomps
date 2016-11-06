@@ -1,4 +1,44 @@
+// Colors
+$brand-primary: #2C97DE;
+$brand-success: #5cb85c !default;
+
+// Scaffolding
+$body-bg: #212121;
+$text-color: #fff;
+
 // Typography
 $font-family-sans-serif: "Roboto", sans-serif;
 $font-size-base: 13px;
 $line-height-base: 1.2;
+
+// Tables
+$table-bg-accent: #242424;
+$table-border-color: #2d2d2d;
+
+// Panels
+$panel-bg: #1A1A1A;
+$panel-default-heading-bg: #282828;
+$panel-default-text: #fff;
+$panel-default-border: #333;
+
+// Navbar
+$navbar-border-radius: 0;
+$navbar-inverse-color: #fff;
+$navbar-inverse-bg: #1A1A1A;
+$navbar-inverse-border: #282828;
+$navbar-margin-bottom: 0;
+$navbar-inverse-link-color: #fff;
+$navbar-inverse-link-hover-bg: $brand-primary;
+$navbar-inverse-brand-color: $brand-success;
+$navbar-inverse-brand-hover-color: #fff;
+$navbar-inverse-brand-hover-bg: $brand-success;
+
+// Forms
+$input-bg: #353535;
+$input-color: #eee;
+
+// Pagination
+$pagination-bg: $table-bg-accent;
+$pagination-border: $table-border-color;
+$pagination-disabled-border: $table-border-color;
+$pagination-disabled-bg: #1A1A1A;

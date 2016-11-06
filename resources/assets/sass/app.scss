@@ -7,6 +7,9 @@
 // Bootstrap
 @import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
 
+@import "wow-classes";
+
+// Icons
 .wowicon {
     max-height: 20px;
     max-width: 20px;
@@ -18,4 +21,37 @@ td .wowicon {
 }
 .regionicon {
     vertical-align: bottom;
+}
+
+// Panels
+.panel-heading {
+    text-transform: uppercase;
+    font-family: $font-family-monospace;
+    letter-spacing: 1px;
+    font-size: 12px;
+}
+
+.page-header-bar {
+    background-color: #262626;
+    margin-bottom: 20px;
+    padding: 20px;
+
+    h1 {
+        font-size: 22px;
+        margin: 0;
+    }
+}
+
+$footer-bg: #1A1A1A;
+
+.footer {
+    background-color: $footer-bg;
+    padding: 20px;
+    margin-top: 20px;
+    color: #666;
+    box-shadow: 0px 500px 0px 500px $footer-bg;
+
+    a {
+        color: #777;
+    }
 }

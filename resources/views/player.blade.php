@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col-sm-3">
             <div class="panel panel-default">
-                <div class="panel-heading panel-title">
+                <div class="panel-heading">
                     Character
                 </div>
                 <table class="table table-condensed">
@@ -24,7 +24,7 @@
         @foreach ($player->stats as $stat)
             <div class="col-sm-3">
                 <div class="panel panel-default">
-                    <div class="panel-heading panel-title">
+                    <div class="panel-heading">
                         {{ $stat->bracket->name }} Stats
                     </div>
                     <table class="table table-condensed">
@@ -43,7 +43,7 @@
     </div>
 
     <div class="panel panel-default">
-        <div class="panel-heading panel-title">
+        <div class="panel-heading">
             Teams
         </div>
         <table class="table table-striped table-bordered table-condensed">
