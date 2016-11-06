@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\GetLeaderboard::class,
         Commands\GenerateComps::class,
+        Commands\ClearComps::class,
         Commands\GeneratePerformance::class,
     ];
 

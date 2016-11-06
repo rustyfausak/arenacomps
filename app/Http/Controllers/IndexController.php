@@ -35,6 +35,7 @@ class IndexController extends Controller
         }
         $region = OptionsController::getRegion();
         $bracket = OptionsController::getBracket();
+        $term = OptionsController::getTerm();
         $q = Stat::where('player_id', '=', $player->id)
             ->where('bracket_id', '=', $bracket->id);
         if ($region) {
@@ -44,10 +45,33 @@ class IndexController extends Controller
             });
         }
         $stat = $q->first();
+
+        $bracket_id = $bracket->id;
+        $term_id = $term ? $term->id : null;
+
+        $q = Snapshot::with([
+                'group',
+                'spec'
+            ])
+            ->select([
+                DB::raw('snapshots.*')
+            ])
+            ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
+            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+            ->where('snapshots.player_id', '=', $player_id)
+            ->where('l.bracket_id', '=', $bracket->id);
+        if ($region) {
+            $q->where('l.region_id', '=', $region->id);
+        }
+        if ($term) {
+            $q->where('l.term_id', '=', $term->id);
+        }
+        $snapshots = $q->orderBy('l.completed_at', 'DESC')
+            ->paginate(20);
         return view('player', [
             'player' => $player,
             'stat' => $stat,
-            'region' => OptionsController::getRegion()
+            'snapshots' => $snapshots
         ]);
     }
 
@@ -100,9 +124,44 @@ class IndexController extends Controller
 
     /**
      */
-    public function getTest()
+    public function getActivity($id = null)
     {
-        return view('test');
+        $leaderboard = Leaderboard::find($id);
+        if (!$leaderboard) {
+            $id = null;
+        }
+        $term = OptionsController::getTerm();
+        $bracket = OptionsController::getBracket();
+        $region = OptionsController::getRegion();
+        $q = Snapshot::with([
+                'group',
+                'spec'
+            ])
+            ->select([
+                DB::raw('snapshots.*')
+            ])
+            ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
+            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+            ->where('l.bracket_id', '=', $bracket->id)
+            ->whereRaw('l.completed_at IS NOT NULL');
+        if ($id) {
+            $q->where('l.id', '=', $id)
+                ->orderBy('snapshots.rating', 'DESC');
+        }
+        else {
+            $q->orderBy('l.completed_at', 'DESC');
+        }
+        if ($region) {
+            $q->where('l.region_id', '=', $region->id);
+        }
+        if ($term) {
+            $q->where('l.term_id', '=', $term->id);
+        }
+        $snapshots = $q->paginate(50);
+        return view('activity', [
+            'leaderboard' => $leaderboard,
+            'snapshots' => $snapshots
+        ]);
     }
 
     /**

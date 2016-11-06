@@ -61,6 +61,7 @@ class GeneratePerformance extends Command
             $term = Term::getDefault();
             $regions = Region::all();
             foreach ($comps as $comp) {
+                print "comp #{$comp->id}\n";
                 $comp->getPerformance($season, null, null, $term);
                 $comp->getPerformance($season, null, null, null);
                 foreach ($regions as $region) {

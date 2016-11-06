@@ -45,15 +45,20 @@ class GenerateComps extends Command
     const MIN_SIMILAR_SNAPSHOTS = 3;
 
     /**
-     * The number of seconds in either direction to look for other snapshots for a player.
-     */
-    const CONSIDER_SNAPSHOTS_WITHIN_SECONDS = 60 * 60 * 24 * 7;
-
-    /**
      * The minimum number of times a player must be put on a team with another player before
      * the team can be finalized.
      */
     const MIN_TEAMMATE_COUNT = 3;
+
+    /**
+     * A number between 0 and 1 representing the amount of weight to put on ratings being similar.
+     */
+    const RATING_WEIGHT = 1;
+
+    /**
+     * Cache for player ID in group ID
+     */
+    protected $pgcache;
 
     /**
      * Create a new command instance.
@@ -63,6 +68,18 @@ class GenerateComps extends Command
     public function __construct()
     {
         parent::__construct();
+
+        $this->pgcache = [];
+    }
+
+    /**
+     * Specify the command options.
+     *
+     * @return array
+     */
+    public function getOptions()
+    {
+        return [];
     }
 
     /**
@@ -71,18 +88,38 @@ class GenerateComps extends Command
     public function handle()
     {
         try {
-            // Find snapshots that need team or comp generated
-            $snapshots = Snapshot::with([
-                    'player',
-                    'group',
-                    'group.leaderboard',
-                    'group.leaderboard.bracket',
+            $q = DB::table('snapshots AS s')
+                ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
+                ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+                ->leftJoin('brackets AS b', 'l.bracket_id', '=', 'b.id')
+                ->select([
+                    's.player_id',
+                    'l.bracket_id',
+                    'b.size',
+                    DB::raw('COUNT(*) AS num'),
+                    DB::raw('GROUP_CONCAT(s.id) AS snapshot_ids'),
+                    DB::raw('GROUP_CONCAT(s.group_id) AS group_ids'),
                 ])
-                ->whereNull('team_id')
-                ->orWhereNull('group_id')
-                ->get();
-            foreach ($snapshots as $snapshot) {
-                $this->generate($snapshot);
+                ->where(function ($q) {
+                    $q->whereNull('s.team_id')
+                        ->orWhereNull('s.comp_id');
+                })
+                ->whereNotNull('l.completed_at')
+                ->whereRaw('l.completed_at > (NOW() - INTERVAL 1 WEEK)')
+                ->groupBy('s.player_id', 'l.bracket_id')
+                ->orderBy('s.rating', 'DESC');
+            $results = $q->get();
+            foreach ($results as $result) {
+                if ($result->num < self::MIN_SIMILAR_SNAPSHOTS) {
+                    // Cannot match when too few snapshots
+                    continue;
+                }
+                $this->generate(
+                    $result->player_id,
+                    $result->size,
+                    explode(',', $result->snapshot_ids),
+                    explode(',', $result->group_ids)
+                );
             }
         }
         catch (\Exception $e) {
@@ -92,80 +129,81 @@ class GenerateComps extends Command
     }
 
     /**
-     * @param Snapshot $snapshot
+     * @param int $group_id
+     * @return array
      */
-    public function generate(Snapshot $main_snapshot)
+    public function playerIdsInGroupId($group_id)
     {
-        $this->info("Snapshot #{$main_snapshot->id} - Player #{$main_snapshot->player_id}");
-
-        if ($main_snapshot->team_id && $main_snapshot->comp_id) {
-            // Has already been determined by another snapshot
-            return;
+        if (array_key_exists($group_id, $this->pgcache)) {
+            return $this->pgcache;
         }
-
-        $bracket_size = $main_snapshot->group->leaderboard->bracket->size;
-        $timestamp = strtotime($main_snapshot->group->leaderboard->created_at);
-        $min_datetime = date("Y-m-d H:i:s", $timestamp - self::CONSIDER_SNAPSHOTS_WITHIN_SECONDS);
-        $max_datetime = date("Y-m-d H:i:s", $timestamp + self::CONSIDER_SNAPSHOTS_WITHIN_SECONDS);
-
-        // Find the snapshots to consider
-        $snapshot_ids = DB::table('snapshots AS s')
-            ->select('s.id')
-            ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
-            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
-            ->where('s.player_id', '=', $main_snapshot->player_id)
-            ->whereRaw("l.created_at > '{$min_datetime}'")
-            ->whereRaw("l.created_at < '{$max_datetime}'")
-            ->pluck('s.id')
+        $this->pgcache[$group_id] = DB::table('snapshots')
+            ->select('player_id')
+            ->where('group_id', '=', $group_id)
+            ->orderBy('rating', 'DESC')
+            ->pluck('player_id')
             ->toArray();
-        //$this->line("\tFound " . sizeof($snapshot_ids) . " snapshots to consider.");
-        if (!sizeof($snapshot_ids)) {
-            return;
-        }
-        $snapshots = Snapshot::whereIn('id', $snapshot_ids)->get();
+        return $this->pgcache[$group_id];
+    }
 
-        // Find the group IDs to consider
-        $group_ids = [];
-        foreach ($snapshots as $snapshot) {
-            $group_ids[] = $snapshot->group_id;
-        }
+    /**
+     * @param int   $player_id
+     * @param int   $bracket_size
+     * @param array $snapshot_ids
+     * @param array $group_ids
+     */
+    public function generate($player_id, $bracket_size, $snapshot_ids, $group_ids)
+    {
+        $this->info("Player #{$player_id} / bracket size: {$bracket_size} / # snapshots: " . sizeof($snapshot_ids));
+
+        $player_snapshots = Snapshot::whereIn('id', $snapshot_ids)->get();
 
         // Find players in the same groups as the considered snapshots and order by occurences
-        $player_data = DB::table('snapshots')
+        $other_player_data = DB::table('snapshots')
             ->select([
                 'player_id',
                 DB::raw('COUNT(*) AS num'),
                 DB::raw('0 AS teammate_count'),
+                DB::raw('AVG(rating) AS avg_rating'),
+                DB::raw('0 AS weight'),
             ])
             ->whereIn('group_id', $group_ids)
-            ->where('player_id', '!=', $main_snapshot->player_id)
+            ->where('player_id', '!=', $player_id)
+            ->whereNull('team_id')
+            ->whereNull('comp_id')
             ->groupBy('player_id')
             ->orderBy('num', 'DESC')
+            ->orderBy('avg_rating', 'DESC')
             ->limit($bracket_size + 1)
             ->having('num', '>', self::MIN_SIMILAR_SNAPSHOTS)
             ->get()
             ->toArray();
-        //$this->line("\tFound " . sizeof($player_data) . " related players.");
-        if (sizeof($player_data) < $bracket_size - 1) {
+        //$this->line("\tFound " . sizeof($other_player_data) . " related players.");
+        if (sizeof($other_player_data) < $bracket_size - 1) {
             // Not enough players to make a team
+            //$this->line("\tnot enough to make a team [1]..");
             return;
         }
 
-        // Each snapshot for this player should consider only the players in $player_data
-
-        foreach ($snapshots as $snapshot) {
+        foreach ($player_snapshots as $snapshot) {
             $snapshot->team_player_ids = [];
 
+            $sort = [];
+            foreach ($other_player_data as $k => $data) {
+                $diff = max(30, min(3000, abs($snapshot->rating - $data->avg_rating)));
+                $data->diff = $diff;
+                $factor = round(1 / ($diff / 3000)); // between 1 and 100
+                $data->factor = $factor;
+                $data->weight = $data->num + round($data->num * self::RATING_WEIGHT * ($factor / 100), 2);
+                $sort[$k] = $data->weight;
+            }
+            array_multisort($sort, SORT_DESC, $other_player_data);
+
             // Find players that are options for teammates for this snapshot
-            // (should be a subset of $player_data)
-            $related_player_ids = DB::table('snapshots')
-                ->select('player_id')
-                ->where('group_id', '=', $snapshot->group_id)
-                ->where('player_id', '!=', $main_snapshot->player_id)
-                ->pluck('player_id')
-                ->toArray();
-            $team_player_ids = [$main_snapshot->player_id];
-            foreach ($player_data as $data) {
+            // (should be a subset of $other_player_data)
+            $related_player_ids = $this->playerIdsInGroupId($snapshot->group_id);
+            $team_player_ids = [$player_id];
+            foreach ($other_player_data as $data) {
                 if (in_array($data->player_id, $related_player_ids)) {
                     $team_player_ids[] = $data->player_id;
                 }
@@ -177,12 +215,12 @@ class GenerateComps extends Command
             $team_player_ids = array_slice($team_player_ids, 0, $bracket_size);
             if (sizeof($team_player_ids) != $bracket_size) {
                 // didn't find enough team members
+                //$this->line("\tnot enough to make a team [2]..");
                 continue;
             }
 
-
             // Found enough team members, add teammate count to player data
-            foreach ($player_data as $data) {
+            foreach ($other_player_data as $data) {
                 if (in_array($data->player_id, $team_player_ids)) {
                     $data->teammate_count++;
                 }
@@ -192,35 +230,36 @@ class GenerateComps extends Command
             $snapshot->team_player_ids = $team_player_ids;
         }
 
-        // Now we know how many times each player in $player_data was put on a team with this player.
+        // Now we know how many times each player in $other_player_data was put on a team with this player.
         // We can require that each player much have a minimum number of teammate_count in order to
         // actually be placed on a team.
 
         // Remove teammates with too few count
         $remove_keys = [];
-        foreach ($player_data as $k => $data) {
+        foreach ($other_player_data as $k => $data) {
             if ($data->teammate_count < self::MIN_TEAMMATE_COUNT) {
-                $remove_keys[] = $k;
+                $remove_keys[$k] = 1;
             }
         }
-        $player_data = array_diff_key($player_data, $remove_keys);
+        $other_player_data = array_diff_key($other_player_data, $remove_keys);
 
-        if (sizeof($player_data) < $bracket_size - 1) {
+        if (sizeof($other_player_data) < $bracket_size - 1) {
             // Not enough players to make a team
+            //$this->line("\tnot enough to make a team [3]..");
             return;
         }
 
-        foreach ($snapshots as $snapshot) {
+        foreach ($player_snapshots as $snapshot) {
             if (!sizeof($snapshot->team_player_ids)) {
                 continue;
             }
             $all = true;
             foreach ($snapshot->team_player_ids as $team_player_id) {
-                if ($team_player_id == $main_snapshot->player_id) {
+                if ($team_player_id == $player_id) {
                     continue;
                 }
                 $found = false;
-                foreach ($player_data as $data) {
+                foreach ($other_player_data as $data) {
                     if ($data->player_id == $team_player_id) {
                         $found = true;
                         break;
@@ -245,6 +284,7 @@ class GenerateComps extends Command
      */
     public function build(Snapshot $snapshot, $team_player_ids)
     {
+        //$this->line("\tbuild " . implode(',', $team_player_ids));
         $team = Team::getOrBuild($team_player_ids);
         $snapshots = Snapshot::where('group_id', '=', $snapshot->group_id)
             ->whereIn('player_id', $team_player_ids)
