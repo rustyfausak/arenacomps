@@ -203,9 +203,30 @@ class IndexController extends Controller
             }
         }
 
-        $q = Performance::where('bracket_id', '=', $bracket->id)
+        $q = Performance::with('comp')
+            ->where('bracket_id', '=', $bracket->id)
             ->where('season_id', '=', $season->id)
             ->whereNotNull('comp_id');
+        foreach ($roles as $i => $role) {
+            if ($role) {
+                if ($specs[$i]) {
+                    $role_spec_ids = [$specs[$i]->id];
+                }
+                else {
+                    $role_spec_ids = Spec::select('id')
+                        ->where('role_id', '=', $role->id)
+                        ->pluck('id')
+                        ->toArray();
+                }
+                $q->whereHas('comp', function ($q) use ($role_spec_ids) {
+                    $q->whereIn('spec_id1', $role_spec_ids)
+                        ->orWhereIn('spec_id2', $role_spec_ids)
+                        ->orWhereIn('spec_id3', $role_spec_ids)
+                        ->orWhereIn('spec_id4', $role_spec_ids)
+                        ->orWhereIn('spec_id5', $role_spec_ids);
+                });
+            }
+        }
         if ($region) {
             $q->where('region_id', '=', $region->id);
         }
