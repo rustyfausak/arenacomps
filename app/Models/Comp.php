@@ -83,9 +83,11 @@ class Comp extends Model
      */
     public function numTeams()
     {
-        return Snapshot::where('comp_id', '=', $this->id)
+        $q = DB::table('snapshots')
+            ->where('comp_id', '=', $this->id)
             ->groupBy('team_id')
-            ->count();
+            ->pluck('team_id');
+        return sizeof($q);
     }
 
     /**
