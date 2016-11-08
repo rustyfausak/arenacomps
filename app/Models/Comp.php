@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DB;
 use App\Traits\ColumnSequence;
 use Illuminate\Database\Eloquent\Model;
 
@@ -46,6 +47,45 @@ class Comp extends Model
     public function getSpecs()
     {
         return array_filter([$this->spec1, $this->spec2, $this->spec3, $this->spec4, $this->spec5]);
+    }
+
+    /**
+     * @param Season  $season
+     * @param Region  $region
+     * @param Term    $term
+     * @param bool    $return_builder
+     * @return array
+     */
+    public function getTeams(Season $season, Region $region = null, Term $term = null, $return_builder = false)
+    {
+        $q = DB::table('snapshots AS s')
+            ->select('s.team_id')
+            ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
+            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+            ->where('s.comp_id', '=', $this->id)
+            ->where('l.season_id', '=', $season->id);
+        if ($region) {
+            $q->where('l.region_id', '=', $region->id);
+        }
+        if ($term) {
+            $q->where('term_id', '=', $term->id);
+        }
+        $team_ids = $q->groupBy('s.team_id')->pluck('team_id');
+        $q = Team::whereIn('id', $team_ids);
+        if ($return_builder) {
+            return $q;
+        }
+        return $q->get();
+    }
+
+    /**
+     * @return int
+     */
+    public function numTeams()
+    {
+        return Snapshot::where('comp_id', '=', $this->id)
+            ->groupBy('team_id')
+            ->count();
     }
 
     /**

@@ -18,3 +18,4 @@ Route::get('leaderboard', ['as' => 'leaderboard', 'uses' => 'IndexController@get
 Route::get('comps', ['as' => 'comps', 'uses' => 'IndexController@getComps']);
 Route::post('set-options', ['as' => 'set-options', 'uses' => 'IndexController@postSetOptions']);
 Route::get('activity/{id?}', ['as' => 'activity', 'uses' => 'IndexController@getActivity']);
+Route::get('comp/{id}', ['as' => 'comp', 'uses' => 'IndexController@getComp']);

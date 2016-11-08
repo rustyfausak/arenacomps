@@ -42,16 +42,18 @@ class GenerateComps extends Command
      * The minimum number of snapshots that must be similar in order for two
      * players to be considered to be on the same team.
      */
-    const MIN_SIMILAR_SNAPSHOTS = 3;
+    const MIN_SIMILAR_SNAPSHOTS = 10;
 
     /**
      * The minimum number of times a player must be put on a team with another player before
      * the team can be finalized.
      */
-    const MIN_TEAMMATE_COUNT = 3;
+    const MIN_TEAMMATE_COUNT = 5;
 
     /**
      * A number between 0 and 1 representing the amount of weight to put on ratings being similar.
+     * Two players within 30 rating of each other will have an additional num_games_similar * rating_weight
+     * applied.
      */
     const RATING_WEIGHT = 1;
 
@@ -169,8 +171,6 @@ class GenerateComps extends Command
             ])
             ->whereIn('group_id', $group_ids)
             ->where('player_id', '!=', $player_id)
-            ->whereNull('team_id')
-            ->whereNull('comp_id')
             ->groupBy('player_id')
             ->orderBy('num', 'DESC')
             ->orderBy('avg_rating', 'DESC')

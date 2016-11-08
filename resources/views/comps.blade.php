@@ -6,7 +6,7 @@
     <hr>
     <form action="" method="get" class="form-inline">
         @for ($i = 1; $i <= $bracket_size; $i++)
-            <div class="form-group form-group-bubble">
+            <div class="form-group group-bubble">
                 <label>{{ $i }}</label>
                 <select name="class{{ $i }}" class="form-control" data-waterfall-to="#specs{{ $i }}">
                     <option value="any">Any</option>
@@ -33,20 +33,17 @@
         <thead>
             <tr>
                 <th colspan="3">Comp</th>
-                <th>Power</th>
-                <th>Avg Rating</th>
-                <th>W</th>
-                <th>L</th>
+                <th class="text-right"><a href="?s=avg_rating&d={{ !$sort_dir }}">Avg Rating</a></th>
+                <th class="text-right"><a href="?s=wins&d={{ !$sort_dir }}">W</a></th>
+                <th class="text-right"><a href="?s=losses&d={{ !$sort_dir }}">L</a></th>
+                <th class="text-right"><a href="?s=ratio&d={{ !$sort_dir }}">W/L Ratio</a></th>
+                <th class="text-right">Teams</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($performances as $performance)
                 <tr>
-                    @foreach (App\Models\Spec::sort([
-                        $performance->comp->spec1,
-                        $performance->comp->spec2,
-                        $performance->comp->spec3,
-                    ]) as $spec)
+                    @foreach (App\Models\Spec::sort($performance->comp->getSpecs()) as $spec)
                         <td>
                             @include('snippets.role-spec', [
                                 'role' => $spec->role->name,
@@ -54,10 +51,11 @@
                             ])
                         </td>
                     @endforeach
-                    <td>{{ $performance->skill }}</td>
-                    <td>{{ $performance->avg_rating }}</td>
-                    <td>{{ $performance->wins }}</td>
-                    <td>{{ $performance->losses }}</td>
+                    <td class="text-right">{{ $performance->avg_rating }}</td>
+                    <td class="text-right">{{ $performance->wins }}</td>
+                    <td class="text-right">{{ $performance->losses }}</td>
+                    <td class="text-right">{{ round($performance->wins / max(1, $performance->losses),2) }}</td>
+                    <td class="text-right"><a href="{{ route('comp', $performance->comp->id) }}">{{ $performance->comp->numTeams() }}</a></td>
                 </tr>
             @endforeach
         </tbody>

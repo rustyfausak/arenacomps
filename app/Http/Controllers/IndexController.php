@@ -185,6 +185,12 @@ class IndexController extends Controller
         $season = OptionsController::getSeason();
         $term = OptionsController::getTerm();
 
+        $sort = $request->input('s');
+        if (!in_array($sort, ['avg_rating', 'wins', 'losses', 'ratio'])) {
+            $sort = null;
+        }
+        $sort_dir = (bool) $request->input('d');
+
         $roles = array_fill(0, $bracket->size, null);
         $specs = array_fill(0, $bracket->size, null);
 
@@ -203,7 +209,11 @@ class IndexController extends Controller
             }
         }
 
-        $q = Performance::with('comp')
+        $q = Performance::select([
+                DB::raw('*'),
+                DB::raw('wins / GREATEST(1,losses) AS ratio')
+            ])
+            ->with('comp')
             ->where('bracket_id', '=', $bracket->id)
             ->where('season_id', '=', $season->id)
             ->whereNotNull('comp_id');
@@ -239,16 +249,54 @@ class IndexController extends Controller
         else {
             $q->whereNull('term_id');
         }
-        $performances = $q->orderBy('skill', 'DESC')
-            ->orderBy('wins', 'DESC')
-            ->orderBy('losses', 'ASC')
-            ->orderBy('avg_rating', 'DESC')
-            ->paginate(20);
+        if ($sort) {
+            $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
+        }
+        else {
+            $q->orderBy('wins', 'DESC')
+                ->orderBy('losses', 'ASC')
+                ->orderBy('avg_rating', 'DESC');
+        }
+        $performances = $q->paginate(20);
         return view('comps', [
             'performances' => $performances,
             'roles' => $roles,
             'specs' => $specs,
             'bracket_size' => $bracket->size,
+            'sort_dir' => $sort_dir,
+            'sort' => $sort,
+        ]);
+    }
+
+    public function getComp($id)
+    {
+        $comp = Comp::find($id);
+        if (!$comp) {
+            return redirect()->route('index');
+        }
+        $region = OptionsController::getRegion();
+        $bracket = OptionsController::getBracket();
+        $season = OptionsController::getSeason();
+        $term = OptionsController::getTerm();
+        $q = Performance::where('bracket_id', '=', $bracket->id)
+            ->where('season_id', '=', $season->id);
+        if ($region) {
+            $q->where('region_id', '=', $region->id);
+        }
+        else {
+            $q->whereNull('region_id');
+        }
+        if ($term) {
+            $q->where('term_id', '=', $term->id);
+        }
+        else {
+            $q->whereNull('term_id');
+        }
+        $performance = $q->first();
+        return view('comp', [
+            'comp' => $comp,
+            'performance' => $performance,
+            'teams' => $comp->getTeams($season, $region, $term, true)->paginate(20)
         ]);
     }
 

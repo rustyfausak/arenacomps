@@ -69,5 +69,7 @@ class ClearComps extends Command
                 'comp_id' => null
             ]);
         DB::table('teams')->truncate();
+        DB::table('comps')->truncate();
+        DB::table('performance')->truncate();
     }
 }

@@ -1,10 +1,12 @@
 <?php
 
+use App\Models\Spec;
+
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class GroupsCompsGen extends Migration
+class FixSpecs extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +15,9 @@ class GroupsCompsGen extends Migration
      */
     public function up()
     {
-        Schema::table('groups', function ($table) {
-            $table->datetime('comps_generated_at')->nullable()->default(null);
-        });
+        $spec = Spec::find(73);
+        $spec->role_id = 1;
+        $spec->save();
     }
 
     /**
@@ -25,8 +27,6 @@ class GroupsCompsGen extends Migration
      */
     public function down()
     {
-        Schema::table('groups', function ($table) {
-            $table->dropColumn('comps_generated_at');
-        });
+        //
     }
 }

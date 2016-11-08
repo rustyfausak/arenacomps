@@ -23,7 +23,7 @@ class SpecSeeder extends Seeder
 
             [71, 'Arms', 1, 3],
             [72, 'Fury', 1, 3],
-            [73, 'Protection', 11, 1],
+            [73, 'Protection', 1, 1],
 
             [102, 'Balance', 11, 3],
             [103, 'Feral', 11, 3],

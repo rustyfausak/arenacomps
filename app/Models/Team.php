@@ -41,6 +41,14 @@ class Team extends Model
     }
 
     /**
+     * @return array of Player
+     */
+    public function getPlayers()
+    {
+        return array_filter([$this->player1, $this->player2, $this->player3, $this->player4, $this->player5]);
+    }
+
+    /**
      * @return Collection of Comp
      */
     public function getComps()

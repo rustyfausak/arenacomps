@@ -43,13 +43,13 @@ class Performance extends Model
      * @param int $losses
      * @return float
      */
-    public static function getSkill($wins, $losses)
+    public static function getSkill($wins, $losses, $avg_rating)
     {
         $ratio = $wins;
         if ($losses) {
             $ratio = round($wins / $losses, 2);
         }
-        return max(0, min(10, $ratio)) * min(1, round(($wins + $losses) / 10, 2));
+        return max(0, min(20, $ratio)) * min(1, round(($wins + $losses) / 20, 2));
     }
 
     /**
@@ -159,7 +159,7 @@ class Performance extends Model
         $performance->wins = $data['wins'];
         $performance->losses = $data['losses'];
         $performance->avg_rating = $data['avg_rating'];
-        $performance->skill = self::getSkill($data['wins'], $data['losses']);
+        $performance->skill = self::getSkill($data['wins'], $data['losses'], $data['avg_rating']);
         $performance->save();
         return $performance;
     }
