@@ -40,7 +40,7 @@
                     'ratio' => 'W/L Ratio'
                 ] as $k => $v)
                     <th class="text-right">
-                        <a href="?s={{ $k }}&d={{ $k == $sort ? !$sort_dir : 0 }}">
+                        <a href="?s={{ $k }}&d={{ $k == $sort ? !$sort_dir : 0 }}&{{ $qs }}">
                             {{ $v }}
                             @if ($k == $sort)
                                 @if ($sort_dir)

@@ -35,7 +35,10 @@ $(document).ready(function () {
             target.show();
             target.find('option[data-waterfall-value]').hide();
             target.find('option[data-waterfall-value="' + val + '"]').show();
-            target.find("option:selected").prop("selected", false);
+            var opt = target.find("option:selected");
+            if (opt.attr('data-waterfall-value') != val) {
+                opt.prop("selected", false);
+            }
         }
         else {
             target.hide();

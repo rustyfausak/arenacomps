@@ -29,13 +29,13 @@ class Controller extends BaseController
             View::share('season', $season);
             View::share('term', $term);
             View::share('region', $region);
-            $params = [
+            $params = array_merge([
                 'region' => $region ? $region->name : 'all',
                 'season' => $season->id,
                 'bracket_id' => $bracket->name,
                 'term' => $term ? $term->id : 'all',
-            ];
-            View::share('qs', $params);
+            ], $request->all());
+            View::share('share_url', url()->current() . '?' . http_build_query($params));
             return $next($request);
         });
     }

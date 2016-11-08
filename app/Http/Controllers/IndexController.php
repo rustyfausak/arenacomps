@@ -209,6 +209,18 @@ class IndexController extends Controller
             }
         }
 
+        $qs = '';
+        foreach ($roles as $i => $role) {
+            if ($role) {
+                $qs .= '&class' . ($i + 1) . '=' . urlencode($role->id);
+            }
+        }
+        foreach ($specs as $i => $spec) {
+            if ($spec) {
+                $qs .= '&spec' . ($i + 1) . '=' . urlencode($spec->id);
+            }
+        }
+
         $q = Performance::select([
                 DB::raw('*'),
                 DB::raw('wins / GREATEST(1,losses) AS ratio')
@@ -266,6 +278,7 @@ class IndexController extends Controller
             'bracket_size' => $bracket->size,
             'sort_dir' => $sort_dir,
             'sort' => $sort,
+            'qs' => $qs,
         ]);
     }
 

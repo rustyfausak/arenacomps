@@ -1,14 +1,14 @@
 <nav class="navbar navbar-inverse navbar-default">
     <div class="container">
         <div class="navbar-header">
-            <a class="navbar-brand" href="{{ route('index') }}">
-                arenacomps
+            <a class="navbar-brand" href="{{ route('index') }}" id="brand">
+                arenacomps<span class="beta">beta</span>
             </a>
         </div>
         <ul class="nav navbar-nav">
+            <li><a href="{{ route('comps') }}">Comps</a></li>
             <li><a href="{{ route('stats') }}">Stats</a></li>
             <li><a href="{{ route('leaderboard') }}">Leaderboard</a></li>
-            <li><a href="{{ route('comps') }}">Comps</a></li>
         </ul>
         <form action="" method="get" class="navbar-form navbar-left">
             <div class="form-group">

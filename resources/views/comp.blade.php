@@ -78,7 +78,7 @@
                     <tr>
                         @foreach ($team->getPlayers() as $player)
                             <td>
-                                <a href="{{ route('player', $team->player_id1) }}">
+                                <a href="{{ route('player', $player->id) }}">
                                     @include('snippets.role-text', [
                                         'role' => $player->role->name,
                                         'text' => $player->name
