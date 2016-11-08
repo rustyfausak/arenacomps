@@ -249,6 +249,7 @@ class IndexController extends Controller
         else {
             $q->whereNull('term_id');
         }
+        $q->whereNull('team_id');
         if ($sort) {
             $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
         }
