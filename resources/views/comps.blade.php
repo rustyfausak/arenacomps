@@ -33,10 +33,25 @@
         <thead>
             <tr>
                 <th colspan="3">Comp</th>
-                <th class="text-right"><a href="?s=avg_rating&d={{ !$sort_dir }}">Avg Rating</a></th>
-                <th class="text-right"><a href="?s=wins&d={{ !$sort_dir }}">W</a></th>
-                <th class="text-right"><a href="?s=losses&d={{ !$sort_dir }}">L</a></th>
-                <th class="text-right"><a href="?s=ratio&d={{ !$sort_dir }}">W/L Ratio</a></th>
+                @foreach ([
+                    'avg_rating' => 'Avg Rating',
+                    'wins' => 'W',
+                    'losses' => 'L',
+                    'ratio' => 'W/L Ratio'
+                ] as $k => $v)
+                    <th class="text-right">
+                        <a href="?s={{ $k }}&d={{ $k == $sort ? !$sort_dir : 0 }}">
+                            {{ $v }}
+                            @if ($k == $sort)
+                                @if ($sort_dir)
+                                    &#9650;
+                                @else
+                                    &#9660;
+                                @endif
+                            @endif
+                        </a>
+                    </th>
+                @endforeach
                 <th class="text-right">Teams</th>
             </tr>
         </thead>
