@@ -262,14 +262,11 @@ class IndexController extends Controller
             $q->whereNull('term_id');
         }
         $q->whereNull('team_id');
-        if ($sort) {
-            $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
+        if (!$sort) {
+            $sort = 'wins';
+            $sort_dir = 0;
         }
-        else {
-            $q->orderBy('wins', 'DESC')
-                ->orderBy('losses', 'ASC')
-                ->orderBy('avg_rating', 'DESC');
-        }
+        $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
         $performances = $q->paginate(20);
         return view('comps', [
             'performances' => $performances,
