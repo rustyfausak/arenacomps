@@ -10,6 +10,9 @@ class Role extends Model
     protected $table = 'roles';
     protected $guarded = [];
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

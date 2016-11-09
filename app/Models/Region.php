@@ -10,6 +10,9 @@ class Region extends Model
     protected $table = 'regions';
     protected $guarded = [];
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

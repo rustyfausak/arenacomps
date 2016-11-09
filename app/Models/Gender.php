@@ -10,6 +10,9 @@ class Gender extends Model
     protected $table = 'genders';
     protected $guarded = [];
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

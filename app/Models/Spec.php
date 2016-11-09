@@ -20,6 +20,9 @@ class Spec extends Model
         return $this->belongsTo('App\Models\SpecType', 'spec_type_id', 'id');
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

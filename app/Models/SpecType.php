@@ -10,6 +10,9 @@ class SpecType extends Model
     protected $table = 'spec_types';
     protected $guarded = [];
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

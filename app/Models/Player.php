@@ -45,6 +45,9 @@ class Player extends Model
         return $this->hasMany('App\Models\Stat', 'player_id', 'id');
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

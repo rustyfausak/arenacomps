@@ -10,7 +10,7 @@ trait ColumnSequence
     public function getSize()
     {
         $count = 0;
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             if ($this->{static::$col_seq_prefix . $i}) {
                 $count++;
             }

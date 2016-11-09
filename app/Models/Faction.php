@@ -10,6 +10,9 @@ class Faction extends Model
     protected $table = 'factions';
     protected $guarded = [];
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;

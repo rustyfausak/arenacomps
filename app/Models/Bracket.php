@@ -10,6 +10,9 @@ class Bracket extends Model
     protected $table = 'brackets';
     protected $guarded = [];
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->name;
