@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App;
 
 use Session;
 use App\Models\Bracket;
@@ -8,8 +8,78 @@ use App\Models\Region;
 use App\Models\Season;
 use App\Models\Term;
 
-class OptionsController
+class OptionsManager
 {
+    /**
+     * @var Season
+     */
+    public $season;
+
+    /**
+     * @var Bracket
+     */
+    public $bracket;
+
+    /**
+     * @var Region
+     */
+    public $region;
+
+    /**
+     * @var array of Region
+     */
+    public $regions;
+
+    /**
+     * @var Term
+     */
+    public $term;
+
+    /**
+     * @var array of Term
+     */
+    public $terms;
+
+    /**
+     * @param Season $season
+     * @param Bracket $bracket
+     * @param Region $region
+     * @param Term $term
+     */
+    public function __construct(Season $season, Bracket $bracket, Region $region = null, Term $term = null)
+    {
+        $this->season = $season;
+        $this->bracket = $bracket;
+        $this->region = $region;
+        $this->term = $term;
+
+        if ($this->region) {
+            $this->regions = [$this->region];
+        }
+        else {
+            $this->regions = Region::all()->toArray();
+        }
+        if ($this->term) {
+            $this->terms = [$this->term];
+        }
+        else {
+            $this->terms = Term::all()->toArray();
+        }
+    }
+
+    /**
+     * @return OptionsManager
+     */
+    public static function build()
+    {
+        return new self(
+            self::getSeason(),
+            self::getBracket(),
+            self::getRegion(),
+            self::getTerm()
+        );
+    }
+
     // -------
     // bracket
     // -------

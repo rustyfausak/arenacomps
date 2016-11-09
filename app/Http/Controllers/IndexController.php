@@ -6,6 +6,7 @@ use DB;
 use Session;
 use Illuminate\Http\Request;
 
+use App\OptionsManager;
 use App\Models\Bracket;
 use App\Models\Comp;
 use App\Models\Faction;
@@ -33,21 +34,19 @@ class IndexController extends Controller
         if (!$player) {
             return redirect()->route('index');
         }
-        $region = OptionsController::getRegion();
-        $bracket = OptionsController::getBracket();
-        $term = OptionsController::getTerm();
+        $om = OptionsManager::build();
         $q = Stat::where('player_id', '=', $player->id)
-            ->where('bracket_id', '=', $bracket->id);
-        if ($region) {
-            $region_id = $region->id;
+            ->where('bracket_id', '=', $om->bracket->id);
+        if ($om->region) {
+            $region_id = $om->region->id;
             $q->whereHas('leaderboard', function ($q) use ($region_id) {
                 $q->where('region_id', '=', $region_id);
             });
         }
         $stat = $q->first();
 
-        $bracket_id = $bracket->id;
-        $term_id = $term ? $term->id : null;
+        $bracket_id = $om->bracket->id;
+        $term_id = $om->term ? $om->term->id : null;
 
         $q = Snapshot::with([
                 'group',
@@ -59,12 +58,12 @@ class IndexController extends Controller
             ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
             ->where('snapshots.player_id', '=', $player_id)
-            ->where('l.bracket_id', '=', $bracket->id);
-        if ($region) {
-            $q->where('l.region_id', '=', $region->id);
+            ->where('l.bracket_id', '=', $om->bracket->id);
+        if ($om->region) {
+            $q->where('l.region_id', '=', $om->region->id);
         }
-        if ($term) {
-            $q->where('l.term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('l.term_id', '=', $om->term->id);
         }
         $snapshots = $q->orderBy('l.completed_at', 'DESC')
             ->paginate(20);
@@ -80,24 +79,14 @@ class IndexController extends Controller
      */
     public function _getLeaderboardIds()
     {
-        $season = OptionsController::getSeason();
-        $term = OptionsController::getTerm();
-        $bracket = OptionsController::getBracket();
-        $region = OptionsController::getRegion();
-        $regions = [];
-        if ($region) {
-            $regions[] = $region;
-        }
-        else {
-            $regions = Region::all();
-        }
+        $om = OptionsManager::build();
         $leaderboard_ids = [];
-        foreach ($regions as $region) {
-            $q = Leaderboard::where('bracket_id', '=', $bracket->id)
-                ->where('season_id', '=', $season->id)
+        foreach ($om->regions as $region) {
+            $q = Leaderboard::where('bracket_id', '=', $om->bracket->id)
+                ->where('season_id', '=', $om->season->id)
                 ->where('region_id', '=', $region->id);
-            if ($term) {
-                $q->where('term_id', '=', $term->id);
+            if ($om->term) {
+                $q->where('term_id', '=', $om->term->id);
             }
             $region_leaderboard_ids = $q->whereNotNull('completed_at')
                 ->orderBy('created_at', 'DESC')
@@ -142,9 +131,7 @@ class IndexController extends Controller
         if (!$leaderboard) {
             $id = null;
         }
-        $term = OptionsController::getTerm();
-        $bracket = OptionsController::getBracket();
-        $region = OptionsController::getRegion();
+        $om = OptionsManager::build();
         $q = Snapshot::with([
                 'group',
                 'spec'
@@ -154,7 +141,7 @@ class IndexController extends Controller
             ])
             ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
-            ->where('l.bracket_id', '=', $bracket->id)
+            ->where('l.bracket_id', '=', $om->bracket->id)
             ->whereRaw('l.completed_at IS NOT NULL');
         if ($id) {
             $q->where('l.id', '=', $id)
@@ -163,11 +150,11 @@ class IndexController extends Controller
         else {
             $q->orderBy('l.completed_at', 'DESC');
         }
-        if ($region) {
-            $q->where('l.region_id', '=', $region->id);
+        if ($om->region) {
+            $q->where('l.region_id', '=', $om->region->id);
         }
-        if ($term) {
-            $q->where('l.term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('l.term_id', '=', $om->term->id);
         }
         $snapshots = $q->paginate(50);
         return view('activity', [
@@ -180,10 +167,7 @@ class IndexController extends Controller
      */
     public function getComps(Request $request)
     {
-        $region = OptionsController::getRegion();
-        $bracket = OptionsController::getBracket();
-        $season = OptionsController::getSeason();
-        $term = OptionsController::getTerm();
+        $om = OptionsManager::build();
 
         $sort = $request->input('s');
         if (!in_array($sort, ['avg_rating', 'wins', 'losses', 'ratio'])) {
@@ -191,8 +175,8 @@ class IndexController extends Controller
         }
         $sort_dir = (bool) $request->input('d');
 
-        $roles = array_fill(0, $bracket->size, null);
-        $specs = array_fill(0, $bracket->size, null);
+        $roles = array_fill(0, $om->bracket->size, null);
+        $specs = array_fill(0, $om->bracket->size, null);
 
         foreach ($request->all() as $k => $v) {
             if (preg_match('/^class(\d+)$/', $k, $m)) {
@@ -226,8 +210,8 @@ class IndexController extends Controller
                 DB::raw('wins / GREATEST(1,losses) AS ratio')
             ])
             ->with('comp')
-            ->where('bracket_id', '=', $bracket->id)
-            ->where('season_id', '=', $season->id)
+            ->where('bracket_id', '=', $om->bracket->id)
+            ->where('season_id', '=', $om->season->id)
             ->whereNotNull('comp_id');
         foreach ($roles as $i => $role) {
             if ($role) {
@@ -249,14 +233,14 @@ class IndexController extends Controller
                 });
             }
         }
-        if ($region) {
-            $q->where('region_id', '=', $region->id);
+        if ($om->region) {
+            $q->where('region_id', '=', $om->region->id);
         }
         else {
             $q->whereNull('region_id');
         }
-        if ($term) {
-            $q->where('term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('term_id', '=', $om->term->id);
         }
         else {
             $q->whereNull('term_id');
@@ -272,7 +256,7 @@ class IndexController extends Controller
             'performances' => $performances,
             'roles' => $roles,
             'specs' => $specs,
-            'bracket_size' => $bracket->size,
+            'bracket_size' => $om->bracket->size,
             'sort_dir' => $sort_dir,
             'sort' => $sort,
             'qs' => $qs,
@@ -285,20 +269,17 @@ class IndexController extends Controller
         if (!$comp) {
             return redirect()->route('index');
         }
-        $region = OptionsController::getRegion();
-        $bracket = OptionsController::getBracket();
-        $season = OptionsController::getSeason();
-        $term = OptionsController::getTerm();
-        $q = Performance::where('bracket_id', '=', $bracket->id)
-            ->where('season_id', '=', $season->id);
-        if ($region) {
-            $q->where('region_id', '=', $region->id);
+        $om = OptionsManager::build();
+        $q = Performance::where('bracket_id', '=', $om->bracket->id)
+            ->where('season_id', '=', $om->season->id);
+        if ($om->region) {
+            $q->where('region_id', '=', $om->region->id);
         }
         else {
             $q->whereNull('region_id');
         }
-        if ($term) {
-            $q->where('term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('term_id', '=', $om->term->id);
         }
         else {
             $q->whereNull('term_id');
@@ -307,7 +288,7 @@ class IndexController extends Controller
         return view('comp', [
             'comp' => $comp,
             'performance' => $performance,
-            'teams' => $comp->getTeams($season, $region, $term, true)->paginate(20)
+            'teams' => $comp->getTeams($om->season, $om->region, $om->term, true)->paginate(20)
         ]);
     }
 
@@ -396,10 +377,10 @@ class IndexController extends Controller
 
     public function postSetOptions(Request $request)
     {
-        OptionsController::setBracket($request->input('bracket'));
-        OptionsController::setRegion($request->input('region'));
-        OptionsController::setSeason($request->input('season'));
-        OptionsController::setTerm($request->input('term'));
+        OptionsManager::setBracket($request->input('bracket'));
+        OptionsManager::setRegion($request->input('region'));
+        OptionsManager::setSeason($request->input('season'));
+        OptionsManager::setTerm($request->input('term'));
         return back();
     }
 }

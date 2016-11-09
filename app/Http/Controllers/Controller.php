@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Session;
-use App\Http\Controllers\OptionsController;
+use App\OptionsManager;
 use Illuminate\Support\Facades\View;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
@@ -17,14 +17,14 @@ class Controller extends BaseController
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            OptionsController::setSeason($request->input('season'));
-            OptionsController::setBracket($request->input('bracket'));
-            OptionsController::setRegion($request->input('region'));
-            OptionsController::setTerm($request->input('term'));
-            $bracket = OptionsController::getBracket();
-            $season = OptionsController::getSeason();
-            $term = OptionsController::getTerm();
-            $region = OptionsController::getRegion();
+            OptionsManager::setSeason($request->input('season'));
+            OptionsManager::setBracket($request->input('bracket'));
+            OptionsManager::setRegion($request->input('region'));
+            OptionsManager::setTerm($request->input('term'));
+            $bracket = OptionsManager::getBracket();
+            $season = OptionsManager::getSeason();
+            $term = OptionsManager::getTerm();
+            $region = OptionsManager::getRegion();
             View::share('bracket', $bracket);
             View::share('season', $season);
             View::share('term', $term);
