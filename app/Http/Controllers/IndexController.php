@@ -241,9 +241,7 @@ class IndexController extends Controller
                 $q->whereHas('comp', function ($q) use ($role_spec_ids) {
                     $q->whereIn('spec_id1', $role_spec_ids)
                         ->orWhereIn('spec_id2', $role_spec_ids)
-                        ->orWhereIn('spec_id3', $role_spec_ids)
-                        ->orWhereIn('spec_id4', $role_spec_ids)
-                        ->orWhereIn('spec_id5', $role_spec_ids);
+                        ->orWhereIn('spec_id3', $role_spec_ids);
                 });
             }
         }
