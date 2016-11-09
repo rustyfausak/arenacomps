@@ -3,12 +3,10 @@
 @section('page-title')
     Stats
     <small>
-        stats for the top 5000 players
-        @if ($region)
-            in {{ strtoupper($region->name) }}
-        @else
-            in all regions
-        @endif
+        stats for the top 5000 players in
+        @foreach ($om->regions as $region)
+            {{ $region }}
+        @endforeach
     </small>
 @endsection
 

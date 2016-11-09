@@ -23,7 +23,8 @@
             </div>
         @endfor
         <div class="form-group form-group-bubble">
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary" style="margin-left: 10px;">Submit</button>
+            <a href="?" style="margin-left: 10px;">reset</a>
         </div>
     </form>
 @endsection
@@ -37,7 +38,8 @@
                     'avg_rating' => 'Avg Rating',
                     'wins' => 'W',
                     'losses' => 'L',
-                    'ratio' => 'W/L Ratio'
+                    'ratio' => 'W/L Ratio',
+                    'num_teams' => '# Teams',
                 ] as $k => $v)
                     <th class="text-right">
                         <a href="?s={{ $k }}&d={{ $k == $sort ? !$sort_dir : 0 }}&{{ $qs }}">
@@ -52,7 +54,6 @@
                         </a>
                     </th>
                 @endforeach
-                <th class="text-right">Teams</th>
             </tr>
         </thead>
         <tbody>
@@ -70,7 +71,11 @@
                     <td class="text-right">{{ $performance->wins }}</td>
                     <td class="text-right">{{ $performance->losses }}</td>
                     <td class="text-right">{{ round($performance->wins / max(1, $performance->losses),2) }}</td>
-                    <td class="text-right"><a href="{{ route('comp', $performance->comp->id) }}">{{ $performance->comp->numTeams() }}</a></td>
+                    <td class="text-right">
+                        <a href="{{ route('comp', $performance->comp->id) }}">
+                            {{ $performance->num_teams }}
+                        </a>
+                    </td>
                 </tr>
             @endforeach
         </tbody>

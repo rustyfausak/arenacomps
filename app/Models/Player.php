@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\OptionsManager;
 use Illuminate\Database\Eloquent\Model;
 
 class Player extends Model
@@ -54,16 +55,16 @@ class Player extends Model
     }
 
     /**
-     * @param Bracket $bracket
+     * @param OptionsManager $om
      * @return Collection of Team
      */
-    public function getTeams(Bracket $bracket)
+    public function getTeams(OptionsManager $om)
     {
         $q = Team::whereRaw(1);
         $cols = [];
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= $om->bracket->size; $i++) {
             $key = 'player_id' . $i;
-            if ($i > $bracket->size) {
+            if ($i > $om->bracket->size) {
                 $q->whereNull($key);
             }
             else {

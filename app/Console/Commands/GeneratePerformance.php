@@ -7,6 +7,7 @@ use DB;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 
+use App\OptionsManager;
 use App\Models\Bracket;
 use App\Models\Comp;
 use App\Models\Faction;
@@ -61,12 +62,17 @@ class GeneratePerformance extends Command
             $term = Term::getDefault();
             $regions = Region::all();
             foreach ($comps as $comp) {
+                $bracket = $comp->getBracket();
                 print "comp #{$comp->id}\n";
-                $comp->getPerformance($season, null, null, $term);
-                $comp->getPerformance($season, null, null, null);
+                $om = new OptionsManager($season, $bracket, null, $term);
+                $comp->getPerformance($om);
+                $om = new OptionsManager($season, $bracket, null, null);
+                $comp->getPerformance($om);
                 foreach ($regions as $region) {
-                    $comp->getPerformance($season, $region, null, $term);
-                    $comp->getPerformance($season, $region, null, null);
+                    $om = new OptionsManager($season, $bracket, $region, null);
+                    $comp->getPerformance($om);
+                    $om = new OptionsManager($season, $bracket, $region, $term);
+                    $comp->getPerformance($om);
                 }
             }
         }

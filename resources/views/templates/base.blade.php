@@ -4,7 +4,7 @@
     @include('templates.header')
     <div class="page-header-bar">
         <div class="container">
-        <div class="pull-right share"><a href="{{ $share_url }}">share</a></div>
+        <div class="pull-right share"><a href="{{ $share_url }}">link to this page</a></div>
             <h1>@yield('page-title', '')</h1>
             @yield('page-header-bar', '')
         </div>

@@ -3,9 +3,6 @@
 @section('page-title', implode(' / ', $comp->getSpecs()))
 
 @section('content')
-    <?php
-    $specs = $comp->getSpecs();
-    ?>
     <div class="row">
         <div class="col-sm-4">
             <div class="panel panel-default">
@@ -48,6 +45,10 @@
                             <td>{{ round($performance->wins / max(1, $performance->losses), 2) }}</td>
                         </tr>
                         <tr>
+                            <th># Teams</th>
+                            <td>{{ $performance->num_teams }}</td>
+                        </tr>
+                        <tr>
                             <th>Last Updated</th>
                             <td>{{ $performance->updated_at }}</td>
                         </tr>
@@ -65,7 +66,7 @@
             <thead>
                 <tr>
                     <th colspan="{{ sizeof($specs) }}">Players</th>
-                    <th>Rating</th>
+                    <th>Avg Rating</th>
                     <th>W</th>
                     <th>L</th>
                 </tr>
@@ -73,7 +74,7 @@
             <tbody>
                 @foreach ($teams as $team)
                     <?php
-                    $performance = $team->getPerformance($season, $region, $comp, $term);
+                    $performance = $team->getPerformance($om);
                     ?>
                     <tr>
                         @foreach ($team->getPlayers() as $player)

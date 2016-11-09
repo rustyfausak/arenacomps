@@ -124,39 +124,53 @@ class IndexController extends Controller
     }
 
     /**
+     * Shows activity for the leaderboard with id=$id. If no $id is given, shows all activity.
+     *
+     * @param int $id
      */
     public function getActivity($id = null)
     {
-        $leaderboard = Leaderboard::find($id);
-        if (!$leaderboard) {
-            $id = null;
+        $leaderboard = null;
+        if ($id) {
+            $q = Leaderboard::where('id', '=', $id)
+                ->where('bracket_id', '=', $this->om->bracket->id)
+                ->where('season_id', '=', $this->om->season->id)
+                ->whereNotNull('completed_at');
+            if ($this->om->region) {
+                $q->where('region_id', '=', $this->om->region->id);
+            }
+            if ($this->om->term) {
+                $q->where('term_id', '=', $this->om->term->id);
+            }
+            $leaderboard = $q->first();
+            if (!$leaderboard) {
+                return redirect()->route('index');
+            }
         }
-        $om = OptionsManager::build();
         $q = Snapshot::with([
                 'group',
-                'spec'
-            ])
-            ->select([
-                DB::raw('snapshots.*')
+                'spec',
+                'spec.role',
+                'player'
             ])
             ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
-            ->where('l.bracket_id', '=', $om->bracket->id)
+            ->where('l.bracket_id', '=', $this->om->bracket->id)
             ->whereRaw('l.completed_at IS NOT NULL');
-        if ($id) {
-            $q->where('l.id', '=', $id)
+        if ($leaderboard) {
+            $q->where('l.id', '=', $leaderboard->id)
                 ->orderBy('snapshots.rating', 'DESC');
         }
         else {
             $q->orderBy('l.completed_at', 'DESC');
         }
-        if ($om->region) {
-            $q->where('l.region_id', '=', $om->region->id);
+        if ($this->om->region) {
+            $q->where('l.region_id', '=', $this->om->region->id);
         }
-        if ($om->term) {
-            $q->where('l.term_id', '=', $om->term->id);
+        if ($this->om->term) {
+            $q->where('l.term_id', '=', $this->om->term->id);
         }
-        $snapshots = $q->paginate(50);
+        $snapshots = $q->paginate(30);
         return view('activity', [
             'leaderboard' => $leaderboard,
             'snapshots' => $snapshots
@@ -170,7 +184,7 @@ class IndexController extends Controller
         $om = OptionsManager::build();
 
         $sort = $request->input('s');
-        if (!in_array($sort, ['avg_rating', 'wins', 'losses', 'ratio'])) {
+        if (!in_array($sort, ['avg_rating', 'wins', 'losses', 'ratio', 'num_teams'])) {
             $sort = null;
         }
         $sort_dir = (bool) $request->input('d');
@@ -263,23 +277,28 @@ class IndexController extends Controller
         ]);
     }
 
+    /**
+     * Shows detailed information about a comp, including stats and teams.
+     *
+     * @param int $id
+     */
     public function getComp($id)
     {
         $comp = Comp::find($id);
-        if (!$comp) {
+        if (!$comp || $comp->getBracket()->id != $this->om->bracket->id) {
             return redirect()->route('index');
         }
-        $om = OptionsManager::build();
-        $q = Performance::where('bracket_id', '=', $om->bracket->id)
-            ->where('season_id', '=', $om->season->id);
-        if ($om->region) {
-            $q->where('region_id', '=', $om->region->id);
+        $q = Performance::where('bracket_id', '=', $this->om->bracket->id)
+            ->where('season_id', '=', $this->om->season->id)
+            ->where('comp_id', '=', $comp->id);
+        if ($this->om->region) {
+            $q->where('region_id', '=', $this->om->region->id);
         }
         else {
             $q->whereNull('region_id');
         }
-        if ($om->term) {
-            $q->where('term_id', '=', $om->term->id);
+        if ($this->om->term) {
+            $q->where('term_id', '=', $this->om->term->id);
         }
         else {
             $q->whereNull('term_id');
@@ -287,8 +306,9 @@ class IndexController extends Controller
         $performance = $q->first();
         return view('comp', [
             'comp' => $comp,
+            'specs' => $comp->getSpecs(),
             'performance' => $performance,
-            'teams' => $comp->getTeams($om->season, $om->region, $om->term, true)->paginate(20)
+            'teams' => $comp->getTeamsBuilder($this->om)->paginate(20)
         ]);
     }
 

@@ -14,30 +14,30 @@
             <div class="form-group">
                 <select name="region" class="form-control" data-submit-on-change>
                     <option value="all">All</option>
-                    @foreach (App\Models\Region::all() as $_region)
-                        <option value="{{ $_region->name }}" {{ $region && $_region->id == $region->id ? 'selected="selected"' : '' }}>{{ $_region->name }}</option>
+                    @foreach (App\Models\Region::all() as $region)
+                        <option value="{{ $region->name }}" {{ $om->region && $region->id == $om->region->id ? 'selected="selected"' : '' }}>{{ $region->name }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="form-group">
                 <select name="bracket" class="form-control" data-submit-on-change>
-                    @foreach (App\Models\Bracket::all() as $_bracket)
-                        <option value="{{ $_bracket->name }}" {{ $_bracket->id == $bracket->id ? 'selected="selected"' : '' }}>{{ $_bracket->name }}</option>
+                    @foreach (App\Models\Bracket::all() as $bracket)
+                        <option value="{{ $bracket->name }}" {{ $bracket->id == $om->bracket->id ? 'selected="selected"' : '' }}>{{ $bracket->name }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="form-group">
                 <select name="season" class="form-control" data-submit-on-change>
-                    @foreach (App\Models\Season::all() as $_season)
-                        <option value="{{ $_season->id }}" {{ $_season->id == $season->id ? 'selected="selected"' : '' }}>{{ $_season->name }}</option>
+                    @foreach (App\Models\Season::all() as $season)
+                        <option value="{{ $season->id }}" {{ $season->id == $om->season->id ? 'selected="selected"' : '' }}>{{ $season->name }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="form-group">
                 <select name="term" class="form-control" data-submit-on-change>
                     <option value="all">All</option>
-                    @foreach (App\Models\Term::where('season_id', '=', $season->id)->get() as $_term)
-                        <option value="{{ $_term->id }}" {{ $term && $_term->id == $term->id ? 'selected="selected"' : '' }}>{{ $_term->name }}</option>
+                    @foreach (App\Models\Term::where('season_id', '=', $season->id)->get() as $term)
+                        <option value="{{ $term->id }}" {{ $om->term && $term->id == $om->term->id ? 'selected="selected"' : '' }}>{{ $term->name }}</option>
                     @endforeach
                 </select>
             </div>

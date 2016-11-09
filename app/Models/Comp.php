@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use DB;
+use App\OptionsManager;
 use App\Traits\ColumnSequence;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,6 +33,19 @@ class Comp extends Model
     }
 
     /**
+     * @return Bracket
+     */
+    public function getBracket()
+    {
+        return Bracket::where('size', '=', sizeof(array_filter([
+                $this->spec_id1,
+                $this->spec_id2,
+                $this->spec_id3,
+            ])))
+            ->first();
+    }
+
+    /**
      * @return array of Spec
      */
     public function getSpecs()
@@ -40,56 +54,58 @@ class Comp extends Model
     }
 
     /**
-     * @param Season  $season
-     * @param Region  $region
-     * @param Term    $term
-     * @param bool    $return_builder
+     * @param OptionsManager $om
      * @return array
      */
-    public function getTeams(Season $season, Region $region = null, Term $term = null, $return_builder = false)
+    public function getTeamsBuilder(OptionsManager $om)
     {
         $q = DB::table('snapshots AS s')
             ->select('s.team_id')
             ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
             ->where('s.comp_id', '=', $this->id)
-            ->where('l.season_id', '=', $season->id);
-        if ($region) {
-            $q->where('l.region_id', '=', $region->id);
+            ->where('l.season_id', '=', $om->season->id);
+        if ($om->region) {
+            $q->where('l.region_id', '=', $om->region->id);
         }
-        if ($term) {
-            $q->where('term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('term_id', '=', $om->term->id);
         }
-        $team_ids = $q->groupBy('s.team_id')->pluck('team_id');
-        $q = Team::whereIn('id', $team_ids);
-        if ($return_builder) {
-            return $q;
-        }
-        return $q->get();
+        $team_ids = $q->groupBy('s.team_id')
+            ->pluck('team_id');
+        return Team::whereIn('id', $team_ids);
     }
 
     /**
+     * @param OptionsManager $om
      * @return int
      */
-    public function numTeams()
+    public function numTeams(OptionsManager $om)
     {
-        $q = DB::table('snapshots')
-            ->where('comp_id', '=', $this->id)
-            ->groupBy('team_id')
-            ->pluck('team_id');
-        return sizeof($q);
+        $q = DB::table('snapshots AS s')
+            ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
+            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+            ->where('s.comp_id', '=', $this->id)
+            ->where('l.season_id', '=', $om->season->id)
+            ->where('l.bracket_id', '=', $om->bracket->id);
+        if ($om->region) {
+            $q->where('l.region_id', '=', $om->region->id);
+        }
+        if ($om->term) {
+            $q->where('l.term_id', '=', $om->term->id);
+        }
+        $results = $q->groupBy('s.team_id')
+            ->pluck('s.team_id');
+        return sizeof($results);
     }
 
     /**
-     * @param Season  $season
-     * @param Region  $region
-     * @param Team    $team
-     * @param Term    $term
-     * @return array
+     * @param OptionsManager $om
+     * @return Performance
      */
-    public function getPerformance(Season $season, Region $region = null, Team $team = null, Term $term = null)
+    public function getPerformance(OptionsManager $om)
     {
-        $bracket = Bracket::where('size', '=', $this->getSize())->first();
-        return Performance::build($bracket, $season, $region, $team, $this, $term);
+        $om->comp = $this;
+        return Performance::build($om);
     }
 }

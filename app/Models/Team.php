@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\OptionsManager;
 use App\Traits\ColumnSequence;
 use Illuminate\Database\Eloquent\Model;
 
@@ -51,15 +52,12 @@ class Team extends Model
     }
 
     /**
-     * @param Season  $season
-     * @param Region  $region
-     * @param Comp    $comp
-     * @param Term    $term
-     * @return array
+     * @param OptionsManager $om
+     * @return Performance
      */
-    public function getPerformance(Season $season, Region $region = null, Comp $comp = null, Term $term = null)
+    public function getPerformance(OptionsManager $om)
     {
-        $bracket = Bracket::where('size', '=', $this->getSize())->first();
-        return Performance::build($bracket, $season, $region, $this, $comp, $term);
+        $om->team = $this;
+        return Performance::build($om);
     }
 }

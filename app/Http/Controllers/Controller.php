@@ -16,24 +16,20 @@ class Controller extends BaseController
 
     public function __construct()
     {
+        View::share('xtime', microtime(true));
         $this->middleware(function ($request, $next) {
             OptionsManager::setSeason($request->input('season'));
             OptionsManager::setBracket($request->input('bracket'));
             OptionsManager::setRegion($request->input('region'));
             OptionsManager::setTerm($request->input('term'));
-            $bracket = OptionsManager::getBracket();
-            $season = OptionsManager::getSeason();
-            $term = OptionsManager::getTerm();
-            $region = OptionsManager::getRegion();
-            View::share('bracket', $bracket);
-            View::share('season', $season);
-            View::share('term', $term);
-            View::share('region', $region);
+            $om = OptionsManager::build();
+            $this->om = $om;
+            View::share('om', $om);
             $params = array_merge([
-                'region' => $region ? $region->name : 'all',
-                'season' => $season->id,
-                'bracket_id' => $bracket->name,
-                'term' => $term ? $term->id : 'all',
+                'region' => $om->region ? $om->region->name : 'all',
+                'season' => $om->season->id,
+                'bracket_id' => $om->bracket->name,
+                'term' => $om->term ? $om->term->id : 'all',
             ], $request->all());
             View::share('share_url', url()->current() . '?' . http_build_query($params));
             return $next($request);

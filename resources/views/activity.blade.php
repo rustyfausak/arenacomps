@@ -4,7 +4,8 @@
     Activity
     <small>
         @if ($leaderboard)
-            Showing activity for timestamp {{ $leaderboard->completed_at }}. <a href="{{ route('activity') }}">show all</a>
+            Showing activity for update #{{ $leaderboard->id }} at {{ $leaderboard->completed_at }}.
+            <a href="{{ route('activity') }}">show all</a>
         @else
             All activity
         @endif
@@ -18,25 +19,33 @@
                 <th>Timestamp</th>
                 <th>Player</th>
                 <th>Spec</th>
-                <th>Rating</th>
-                <th>Wins</th>
-                <th>Losses</th>
+                <th class="text-right">Rating</th>
+                <th class="text-right">Wins</th>
+                <th class="text-right">Losses</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($snapshots as $snapshot)
                 <tr>
-                    <td><a href="{{ route('activity', $snapshot->group->leaderboard->id) }}">{{ $snapshot->group->leaderboard->completed_at }}</a></td>
-                    <td><a href="{{ route('player', $snapshot->player_id) }}">{{ $snapshot->player->name }}</a></td>
+                    <td>
+                        <a href="{{ route('activity', $snapshot->group->leaderboard->id) }}">
+                            {{ $snapshot->group->leaderboard->completed_at }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ route('player', $snapshot->player_id) }}">
+                            {{ $snapshot->player->name }}
+                        </a>
+                     </td>
                     <td>
                         @include('snippets.spec', [
                             'role' => $snapshot->spec->role->name,
                             'spec' => $snapshot->spec->name
                         ])
                     </td>
-                    <td>{{ $snapshot->rating }}</td>
-                    <td>{{ $snapshot->group->wins }}</td>
-                    <td>{{ $snapshot->group->losses }}</td>
+                    <td class="text-right">{{ $snapshot->rating }}</td>
+                    <td class="text-right">{{ $snapshot->group->wins }}</td>
+                    <td class="text-right">{{ $snapshot->group->losses }}</td>
                 </tr>
             @endforeach
         </tbody>

@@ -57,7 +57,7 @@
         @endif
     </div>
 
-    @if ($region && $player->realm->region->id != $region->id)
+    @if ($om->region && $player->realm->region->id != $om->region->id)
         <div class="alert alert-warning">
             Player from different region
         </div>
@@ -77,13 +77,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($player->getTeams($bracket) as $team)
+                    @foreach ($player->getTeams($om) as $team)
                         <?php
-                        $performance = $team->getPerformance($season, $region, null, $term);
+                        $performance = $team->getPerformance($om);
                         $comps = $team->getComps();
                         $num_comps = sizeof($comps);
                         $comp = $comps->shift();
-                        $comp_performance = $comp->getPerformance($season, $region, $team, $term);
+                        $team_om = $om;
+                        $team_om->team_id = $team->id;
+                        $comp_performance = $comp->getPerformance($team_om);
                         ?>
                         <tr>
                             <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
@@ -103,7 +105,7 @@
                         </tr>
                         @foreach ($comps as $comp)
                             <?php
-                            $comp_performance = $comp->getPerformance($season, $region, $team, $term);
+                            $comp_performance = $comp->getPerformance($team_om);
                             ?>
                             <tr>
                                 <td colspan="3"></td>

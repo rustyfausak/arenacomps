@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use DB;
+use App\OptionsManager;
 use Illuminate\Database\Eloquent\Model;
 
 class Performance extends Model
@@ -53,47 +54,35 @@ class Performance extends Model
     }
 
     /**
-     * @param Bracket $bracket
-     * @param Season  $season
-     * @param Region  $region
-     * @param Team    $team
-     * @param Comp    $comp
-     * @param Term    $term
+     * @param OptionsManager $om
      * @return Performance
      */
-    public static function build(
-        Bracket $bracket,
-        Season $season,
-        Region $region = null,
-        Team $team = null,
-        Comp $comp = null,
-        Term $term = null
-    ) {
-        if (!$team && !$comp) {
+    public static function build(OptionsManager $om) {
+        if (!$om->team && !$om->comp) {
             return null;
         }
-        $q = self::where('bracket_id', '=', $bracket->id)
-            ->where('season_id', '=', $season->id);
-        if ($region) {
-            $q->where('region_id', '=', $region->id);
+        $q = self::where('bracket_id', '=', $om->bracket->id)
+            ->where('season_id', '=', $om->season->id);
+        if ($om->region) {
+            $q->where('region_id', '=', $om->region->id);
         }
         else {
             $q->whereNull('region_id');
         }
-        if ($team) {
-            $q->where('team_id', '=', $team->id);
+        if ($om->team) {
+            $q->where('team_id', '=', $om->team->id);
         }
         else {
             $q->whereNull('team_id');
         }
-        if ($comp) {
-            $q->where('comp_id', '=', $comp->id);
+        if ($om->comp) {
+            $q->where('comp_id', '=', $om->comp->id);
         }
         else {
             $q->whereNull('comp_id');
         }
-        if ($term) {
-            $q->where('term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('term_id', '=', $om->term->id);
         }
         else {
             $q->whereNull('term_id');
@@ -106,12 +95,12 @@ class Performance extends Model
         }
         else {
             $performance = self::create([
-                'bracket_id' => $bracket->id,
-                'season_id' => $season->id,
-                'region_id' => $region ? $region->id : null,
-                'team_id' => $team ? $team->id : null,
-                'comp_id' => $comp ? $comp->id : null,
-                'term_id' => $term ? $term->id : null,
+                'bracket_id' => $om->bracket->id,
+                'season_id' => $om->season->id,
+                'region_id' => $om->region ? $om->region->id : null,
+                'team_id' => $om->team ? $om->team->id : null,
+                'comp_id' => $om->comp ? $om->comp->id : null,
+                'term_id' => $om->term ? $om->term->id : null,
             ]);
         }
 
@@ -131,19 +120,19 @@ class Performance extends Model
             ])
             ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
-            ->where('l.bracket_id', '=', $bracket->id)
-            ->where('l.season_id', '=', $season->id);
-        if ($region) {
-            $q->where('l.region_id', '=', $region->id);
+            ->where('l.bracket_id', '=', $om->bracket->id)
+            ->where('l.season_id', '=', $om->season->id);
+        if ($om->region) {
+            $q->where('l.region_id', '=', $om->region->id);
         }
-        if ($term) {
-            $q->where('l.term_id', '=', $term->id);
+        if ($om->term) {
+            $q->where('l.term_id', '=', $om->term->id);
         }
-        if ($team) {
-            $q->where('s.team_id', '=', $team->id);
+        if ($om->team) {
+            $q->where('s.team_id', '=', $om->team->id);
         }
-        if ($comp) {
-            $q->where('s.comp_id', '=', $comp->id);
+        if ($om->comp) {
+            $q->where('s.comp_id', '=', $om->comp->id);
         }
         $results = $q->groupBy('s.group_id', 's.team_id')
             ->get();
@@ -160,6 +149,9 @@ class Performance extends Model
         $performance->losses = $data['losses'];
         $performance->avg_rating = $data['avg_rating'];
         $performance->skill = self::getSkill($data['wins'], $data['losses'], $data['avg_rating']);
+        if ($om->comp && !$om->team) {
+            $performance->num_teams = $om->comp->numTeams($om);
+        }
         $performance->save();
         return $performance;
     }

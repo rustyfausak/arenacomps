@@ -11,17 +11,17 @@ use App\Models\Term;
 class OptionsManager
 {
     /**
-     * @var Season
+     * @var Season REQUIRED
      */
     public $season;
 
     /**
-     * @var Bracket
+     * @var Bracket REQUIRED
      */
     public $bracket;
 
     /**
-     * @var Region
+     * @var Region OPTIONAL
      */
     public $region;
 
@@ -31,7 +31,7 @@ class OptionsManager
     public $regions;
 
     /**
-     * @var Term
+     * @var Term OPTIONAL
      */
     public $term;
 
@@ -41,23 +41,42 @@ class OptionsManager
     public $terms;
 
     /**
+     * @var Team OPTIONAL
+     */
+    public $team;
+
+    /**
+     * @var Comp OPTIONAL
+     */
+    public $comp;
+
+    /**
      * @param Season $season
      * @param Bracket $bracket
      * @param Region $region
      * @param Term $term
+     * @param Team $team
      */
-    public function __construct(Season $season, Bracket $bracket, Region $region = null, Term $term = null)
-    {
+    public function __construct(
+        Season $season,
+        Bracket $bracket,
+        Region $region = null,
+        Term $term = null,
+        Team $team = null,
+        Comp $comp = null
+    ) {
         $this->season = $season;
         $this->bracket = $bracket;
         $this->region = $region;
         $this->term = $term;
+        $this->team = $team;
+        $this->comp = $comp;
 
         if ($this->region) {
             $this->regions = [$this->region];
         }
         else {
-            $this->regions = Region::all()->toArray();
+            $this->regions = Region::all();
         }
         if ($this->term) {
             $this->terms = [$this->term];
