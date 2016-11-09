@@ -31,22 +31,12 @@ class Comp extends Model
         return $this->belongsTo('App\Models\Spec', 'spec_id3', 'id');
     }
 
-    public function spec4()
-    {
-        return $this->belongsTo('App\Models\Spec', 'spec_id4', 'id');
-    }
-
-    public function spec5()
-    {
-        return $this->belongsTo('App\Models\Spec', 'spec_id5', 'id');
-    }
-
     /**
      * @return array of Spec
      */
     public function getSpecs()
     {
-        return array_filter([$this->spec1, $this->spec2, $this->spec3, $this->spec4, $this->spec5]);
+        return array_filter([$this->spec1, $this->spec2, $this->spec3]);
     }
 
     /**

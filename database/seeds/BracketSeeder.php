@@ -15,7 +15,6 @@ class BracketSeeder extends Seeder
         foreach ([
             ['2v2', 2],
             ['3v3', 3],
-            ['5v5', 5],
         ] as $data) {
             Bracket::firstOrCreate([
                 'name' => $data[0],
