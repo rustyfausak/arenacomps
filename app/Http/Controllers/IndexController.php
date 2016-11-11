@@ -7,6 +7,7 @@ use Session;
 use Illuminate\Http\Request;
 
 use App\OptionsManager;
+use App\ComputeStats;
 use App\Models\Bracket;
 use App\Models\Comp;
 use App\Models\Faction;
@@ -17,6 +18,7 @@ use App\Models\Player;
 use App\Models\Race;
 use App\Models\Realm;
 use App\Models\Region;
+use App\Models\Rep;
 use App\Models\Role;
 use App\Models\Snapshot;
 use App\Models\Spec;
@@ -26,105 +28,7 @@ use App\Models\Team;
 class IndexController extends Controller
 {
     /**
-     * @param int $player_id
-     */
-    public function getPlayer($player_id)
-    {
-        $player = Player::find($player_id);
-        if (!$player) {
-            return redirect()->route('index');
-        }
-        $om = OptionsManager::build();
-        $q = Stat::where('player_id', '=', $player->id)
-            ->where('bracket_id', '=', $om->bracket->id);
-        if ($om->region) {
-            $region_id = $om->region->id;
-            $q->whereHas('leaderboard', function ($q) use ($region_id) {
-                $q->where('region_id', '=', $region_id);
-            });
-        }
-        $stat = $q->first();
-
-        $bracket_id = $om->bracket->id;
-        $term_id = $om->term ? $om->term->id : null;
-
-        $q = Snapshot::with([
-                'group',
-                'spec'
-            ])
-            ->select([
-                DB::raw('snapshots.*')
-            ])
-            ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
-            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
-            ->where('snapshots.player_id', '=', $player_id)
-            ->where('l.bracket_id', '=', $om->bracket->id);
-        if ($om->region) {
-            $q->where('l.region_id', '=', $om->region->id);
-        }
-        if ($om->term) {
-            $q->where('l.term_id', '=', $om->term->id);
-        }
-        $snapshots = $q->orderBy('l.completed_at', 'DESC')
-            ->paginate(20);
-        return view('player', [
-            'player' => $player,
-            'stat' => $stat,
-            'snapshots' => $snapshots
-        ]);
-    }
-
-    /**
-     * @return array
-     */
-    public function _getLeaderboardIds()
-    {
-        $om = OptionsManager::build();
-        $leaderboard_ids = [];
-        foreach ($om->regions as $region) {
-            $q = Leaderboard::where('bracket_id', '=', $om->bracket->id)
-                ->where('season_id', '=', $om->season->id)
-                ->where('region_id', '=', $region->id);
-            if ($om->term) {
-                $q->where('term_id', '=', $om->term->id);
-            }
-            $region_leaderboard_ids = $q->whereNotNull('completed_at')
-                ->orderBy('created_at', 'DESC')
-                ->pluck('id')
-                ->toArray();
-            $leaderboard_ids = array_merge($leaderboard_ids, $region_leaderboard_ids);
-        }
-        return $leaderboard_ids;
-    }
-
-    /**
-     */
-    public function getLeaderboard(Request $request)
-    {
-        $role = null;
-        if ($request->input('class')) {
-            $role = Role::find($request->input('class'));
-        }
-        $leaderboard_ids = $this->_getLeaderboardIds();
-        $q = Stat::with('player')
-            ->whereIn('leaderboard_id', $leaderboard_ids)
-            ->orderBy('rating', 'DESC');
-        if ($role) {
-            $role_id = $role->id;
-            $q->whereHas('player', function ($q) use ($role_id) {
-                $q->where('role_id', '=', $role_id);
-            });
-        }
-        $stats = $q->paginate(20);
-
-        return view('leaderboard', [
-            'stats' => $stats,
-            'role' => $role
-        ]);
-    }
-
-    /**
-     * Shows activity for the leaderboard with id=$id. If no $id is given, shows all activity.
+     * Shows activity for leaderboard.id = $id. If no $id is given, shows all activity.
      *
      * @param int $id
      */
@@ -174,6 +78,50 @@ class IndexController extends Controller
         return view('activity', [
             'leaderboard' => $leaderboard,
             'snapshots' => $snapshots
+        ]);
+    }
+
+    /**
+     * Shows detailed information about a comp, including stats and teams.
+     *
+     * @param int $id
+     */
+    public function getComp($id)
+    {
+        $comp = Comp::find($id);
+        if (!$comp || $comp->getBracket()->id != $this->om->bracket->id) {
+            return redirect()->route('index');
+        }
+        $q = Performance::where('bracket_id', '=', $this->om->bracket->id)
+            ->where('season_id', '=', $this->om->season->id)
+            ->where('comp_id', '=', $comp->id);
+        if ($this->om->region) {
+            $q->where('region_id', '=', $this->om->region->id);
+        }
+        else {
+            $q->whereNull('region_id');
+        }
+        if ($this->om->term) {
+            $q->where('term_id', '=', $this->om->term->id);
+        }
+        else {
+            $q->whereNull('term_id');
+        }
+        $performance = $q->first();
+
+        $teams = $comp->getTeamsBuilder($this->om)->paginate(20);
+        foreach ($teams as $team) {
+            $team->performance = $team->getPerformance($this->om);
+            $team->players = $team->getPlayers();
+        }
+
+        $specs = $comp->getSpecs();
+
+        return view('comp', [
+            'comp' => $comp,
+            'specs' => $specs,
+            'performance' => $performance,
+            'teams' => $teams
         ]);
     }
 
@@ -276,120 +224,141 @@ class IndexController extends Controller
     }
 
     /**
-     * Shows detailed information about a comp, including stats and teams.
-     *
-     * @param int $id
+     * @return array
      */
-    public function getComp($id)
+    public function _getLeaderboardIds()
     {
-        $comp = Comp::find($id);
-        if (!$comp || $comp->getBracket()->id != $this->om->bracket->id) {
+        $om = OptionsManager::build();
+        $leaderboard_ids = [];
+        foreach ($om->regions as $region) {
+            $q = Leaderboard::where('bracket_id', '=', $om->bracket->id)
+                ->where('season_id', '=', $om->season->id)
+                ->where('region_id', '=', $region->id);
+            if ($om->term) {
+                $q->where('term_id', '=', $om->term->id);
+            }
+            $region_leaderboard_ids = $q->whereNotNull('completed_at')
+                ->orderBy('created_at', 'DESC')
+                ->pluck('id')
+                ->toArray();
+            $leaderboard_ids = array_merge($leaderboard_ids, $region_leaderboard_ids);
+        }
+        return $leaderboard_ids;
+    }
+
+    /**
+     */
+    public function getLeaderboard(Request $request)
+    {
+        $role = null;
+        if ($request->input('class')) {
+            $role = Role::find($request->input('class'));
+        }
+        $leaderboard_ids = $this->_getLeaderboardIds();
+        $q = Stat::with([
+                'player',
+                'player.realm',
+                'player.realm.region',
+                'player.race',
+                'player.gender',
+                'player.role',
+                'player.spec',
+            ])
+            ->whereIn('leaderboard_id', $leaderboard_ids)
+            ->orderBy('rating', 'DESC');
+        if ($role) {
+            $role_id = $role->id;
+            $q->whereHas('player', function ($q) use ($role_id) {
+                $q->where('role_id', '=', $role_id);
+            });
+        }
+        $stats = $q->paginate(20);
+
+        return view('leaderboard', [
+            'stats' => $stats,
+            'role' => $role
+        ]);
+    }
+
+    /**
+     * @param int $player_id
+     */
+    public function getPlayer($player_id)
+    {
+        $player = Player::with([
+                'realm',
+                'realm.region',
+                'role',
+                'spec',
+                'race',
+                'gender',
+                'faction',
+            ])
+            ->find($player_id);
+        if (!$player) {
             return redirect()->route('index');
         }
-        $q = Performance::where('bracket_id', '=', $this->om->bracket->id)
-            ->where('season_id', '=', $this->om->season->id)
-            ->where('comp_id', '=', $comp->id);
-        if ($this->om->region) {
-            $q->where('region_id', '=', $this->om->region->id);
+        $om = OptionsManager::build();
+        $q = Stat::where('player_id', '=', $player->id)
+            ->where('bracket_id', '=', $om->bracket->id);
+        if ($om->region) {
+            $region_id = $om->region->id;
+            $q->whereHas('leaderboard', function ($q) use ($region_id) {
+                $q->where('region_id', '=', $region_id);
+            });
         }
-        else {
-            $q->whereNull('region_id');
+        $stat = $q->first();
+
+        $bracket_id = $om->bracket->id;
+        $term_id = $om->term ? $om->term->id : null;
+
+        $q = Snapshot::with([
+                'group',
+                'spec'
+            ])
+            ->select([
+                DB::raw('snapshots.*')
+            ])
+            ->leftJoin('groups AS g', 'snapshots.group_id', '=', 'g.id')
+            ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
+            ->where('snapshots.player_id', '=', $player_id)
+            ->where('l.bracket_id', '=', $om->bracket->id);
+        if ($om->region) {
+            $q->where('l.region_id', '=', $om->region->id);
         }
-        if ($this->om->term) {
-            $q->where('term_id', '=', $this->om->term->id);
+        if ($om->term) {
+            $q->where('l.term_id', '=', $om->term->id);
         }
-        else {
-            $q->whereNull('term_id');
-        }
-        $performance = $q->first();
-        return view('comp', [
-            'comp' => $comp,
-            'specs' => $comp->getSpecs(),
-            'performance' => $performance,
-            'teams' => $comp->getTeamsBuilder($this->om)->paginate(20)
+        $snapshots = $q->orderBy('l.completed_at', 'DESC')
+            ->paginate(20);
+
+        $teams = $player->getTeams($this->om);
+
+        return view('player', [
+            'player' => $player,
+            'stat' => $stat,
+            'snapshots' => $snapshots,
+            'teams' => $teams
         ]);
     }
 
     public function getStats()
     {
         $leaderboard_ids = $this->_getLeaderboardIds();
+        $reps = Rep::whereIn('leaderboard_id', $leaderboard_ids)->get();
+        $stats = ComputeStats::build($reps);
 
-        $datas = [
-            'role' => [],
-            'spec' => [],
-            'race' => [],
-        ];
-
-        $datas['role'] = DB::table('stats AS s')
-            ->select([
-                'p.role_id',
-                'r.name AS role_name',
-                DB::raw('COUNT(*) AS num'),
-                DB::raw('0 AS ranking'),
-                DB::raw('0 AS pct'),
-            ])
-            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
-            ->leftJoin('roles AS r', 'p.role_id', '=', 'r.id')
-            ->whereIn('s.leaderboard_id', $leaderboard_ids)
-            ->groupBy('p.role_id')
-            ->orderBy('num', 'DESC')
-            ->get()
-            ->toArray();
-
-        $datas['spec'] = DB::table('stats AS s')
-            ->select([
-                'p.role_id',
-                'p.spec_id',
-                'r.name AS role_name',
-                'sp.name AS spec_name',
-                DB::raw('COUNT(*) AS num'),
-                DB::raw('0 AS ranking'),
-                DB::raw('0 AS pct'),
-            ])
-            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
-            ->leftJoin('specs AS sp', 'p.spec_id', '=', 'sp.id')
-            ->leftJoin('roles AS r', 'sp.role_id', '=', 'r.id')
-            ->whereIn('s.leaderboard_id', $leaderboard_ids)
-            ->groupBy('p.spec_id')
-            ->orderBy('num', 'DESC')
-            ->get()
-            ->toArray();
-
-        $datas['race'] = DB::table('stats AS s')
-            ->select([
-                'p.race_id',
-                'r.name AS race_name',
-                DB::raw('COUNT(*) AS num'),
-                DB::raw('0 AS ranking'),
-                DB::raw('0 AS pct'),
-            ])
-            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
-            ->leftJoin('races AS r', 'p.race_id', '=', 'r.id')
-            ->whereIn('s.leaderboard_id', $leaderboard_ids)
-            ->groupBy('p.race_id')
-            ->orderBy('num', 'DESC')
-            ->get()
-            ->toArray();
-
-        foreach ($datas as $k => $data) {
-            $total = 0;
-            foreach ($data as $row) {
-                $total += $row->num;
-            }
-            $i = 1;
-            foreach ($data as $row) {
-                $row->ranking = $i++;
-                if ($total) {
-                    $row->pct = round($row->num / $total * 100, 1);
-                }
-            }
-            $datas[$k] = $data;
+        $tmp = [];
+        foreach ($this->om->regions as $region) {
+            $tmp[] = $region->name;
         }
-
+        $region_str = implode(' / ', $tmp);
         return view('stats', [
-            'role_data' => $datas['role'],
-            'spec_data' => $datas['spec'],
-            'race_data' => $datas['race'],
+            'stats' => $stats,
+            'roles' => Role::all()->getDictionary(),
+            'specs' => Spec::all()->getDictionary(),
+            'races' => Race::all()->getDictionary(),
+            'region_str' => $region_str,
         ]);
     }
 

@@ -4,9 +4,7 @@
     Stats
     <small>
         stats for the top 5000 players in
-        @foreach ($om->regions as $region)
-            {{ $region }}
-        @endforeach
+        {{ $region_str }}
     </small>
 @endsection
 
@@ -17,19 +15,13 @@
                 <div class="panel-heading">
                     Classes
                 </div>
-                <table class="table table-striped table-bordered table-condensed">
+                <table class="table table-striped table-bordered table-condensed table-hover">
                     <tbody>
-                        @foreach ($role_data as $row)
-                            <tr>
-                                <td class="text-right">{{ $row->ranking }}</td>
-                                <td>
-                                    <a href="{{ route('leaderboard', ['class' => $row->role_id]) }}">
-                                        @include('snippets.role', ['role' => $row->role_name])
-                                    </a>
-                                </td>
-                                <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
-                                <td class="text-right">{{ $row->num }}</td>
-                            </tr>
+                        @foreach ($stats['by_role'] as $role_id => $arr)
+                            @include('stats.role')
+                            @foreach ($arr['by_race'] as $race_id => $arr)
+                                @include('stats.race')
+                            @endforeach
                         @endforeach
                     </tbody>
                 </table>
@@ -42,21 +34,11 @@
                 </div>
                 <table class="table table-striped table-bordered table-condensed">
                     <tbody>
-                        @foreach ($spec_data as $row)
-                            <tr>
-                                <td class="text-right">{{ $row->ranking }}</td>
-                                <td>
-                                    @include('snippets.role', ['role' => $row->role_name])
-                                </td>
-                                <td>
-                                    @include('snippets.spec', [
-                                        'role' => $row->role_name,
-                                        'spec' => $row->spec_name
-                                    ])
-                                </td>
-                                <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
-                                <td class="text-right">{{ $row->num }}</td>
-                            </tr>
+                        @foreach ($stats['by_spec'] as $spec_id => $arr)
+                            @include('stats.spec')
+                            @foreach ($arr['by_race'] as $race_id => $arr)
+                                @include('stats.race')
+                            @endforeach
                         @endforeach
                     </tbody>
                 </table>
@@ -69,18 +51,11 @@
                 </div>
                 <table class="table table-striped table-bordered table-condensed">
                     <tbody>
-                        @foreach ($race_data as $row)
-                            <tr>
-                                <td class="text-right">{{ $row->ranking }}</td>
-                                <td>
-                                    @include('snippets.race', [
-                                        'race' => $row->race_name,
-                                        'gender' => null,
-                                    ])
-                                </td>
-                                <td class="text-right">{{ sprintf("%01.1f", $row->pct) }}%</td>
-                                <td class="text-right">{{ $row->num }}</td>
-                            </tr>
+                        @foreach ($stats['by_race'] as $race_id => $arr)
+                            @include('stats.race')
+                            @foreach ($arr['by_role'] as $role_id => $arr)
+                                @include('stats.role')
+                            @endforeach
                         @endforeach
                     </tbody>
                 </table>

@@ -5,6 +5,8 @@
 @section('page-header-bar')
     <hr>
     <form action="" method="get" class="form-inline">
+        <input type="hidden" name="s" value="{{ $sort }}">
+        <input type="hidden" name="d" value="{{ $sort_dir }}">
         @for ($i = 1; $i <= $bracket_size; $i++)
             <div class="form-group group-bubble">
                 <label>{{ $i }}</label>
@@ -81,5 +83,5 @@
         </tbody>
     </table>
 
-    {{ $performances->links() }}
+    {{ $performances->appends(['s' => $sort, 'd' => $sort_dir])->links() }}
 @endsection

@@ -77,9 +77,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($player->getTeams($om) as $team)
+                    @foreach ($teams as $team)
                         <?php
-                        $performance = $team->getPerformance($om);
+                        $team_performance = $team->getPerformance($om);
                         $comps = $team->getComps();
                         $num_comps = sizeof($comps);
                         $comp = $comps->shift();
@@ -125,9 +125,9 @@
                         @if ($num_comps > 1)
                             <tr>
                                 <td colspan="6" class="text-right">Total</td>
-                                <td>{{ $performance->avg_rating }}</td>
-                                <td>{{ $performance->wins }}</td>
-                                <td>{{ $performance->losses }}</td>
+                                <td>{{ $team_performance->avg_rating }}</td>
+                                <td>{{ $team_performance->wins }}</td>
+                                <td>{{ $team_performance->losses }}</td>
                             </tr>
                         @endif
                     @endforeach

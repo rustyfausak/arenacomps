@@ -1,6 +1,6 @@
 @extends('templates.base')
 
-@section('page-title', implode(' / ', $comp->getSpecs()))
+@section('page-title', implode(' / ', $specs))
 
 @section('content')
     <div class="row">
@@ -73,11 +73,8 @@
             </thead>
             <tbody>
                 @foreach ($teams as $team)
-                    <?php
-                    $performance = $team->getPerformance($om);
-                    ?>
                     <tr>
-                        @foreach ($team->getPlayers() as $player)
+                        @foreach ($team->players as $player)
                             <td>
                                 <a href="{{ route('player', $player->id) }}">
                                     @include('snippets.role-text', [
@@ -87,9 +84,9 @@
                                 </a>
                             </td>
                         @endforeach
-                        <td>{{ $performance->avg_rating }}</td>
-                        <td>{{ $performance->wins }}</td>
-                        <td>{{ $performance->losses }}</td>
+                        <td>{{ $team->performance->avg_rating }}</td>
+                        <td>{{ $team->performance->wins }}</td>
+                        <td>{{ $team->performance->losses }}</td>
                     </tr>
                 @endforeach
             </tbody>

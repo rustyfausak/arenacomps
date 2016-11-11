@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use DB;
 use App\BattleNetApi;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
@@ -15,6 +16,7 @@ use App\Models\Player;
 use App\Models\Race;
 use App\Models\Realm;
 use App\Models\Region;
+use App\Models\Rep;
 use App\Models\Role;
 use App\Models\Season;
 use App\Models\Snapshot;
@@ -88,7 +90,7 @@ class GetLeaderboard extends Command
                 throw new \Exception("No active term found.");
             }
             if ($this->option('file')) {
-                $this->parseFile($this->option('file'));
+                $leaderboard = $this->parseFile($this->option('file'));
             }
             else {
                 $region = Region::where('name', 'LIKE', $this->option('region'))->first();
@@ -118,8 +120,9 @@ class GetLeaderboard extends Command
                 if ($this->option('save')) {
                     file_put_contents($this->option('save'), json_encode($data, JSON_PRETTY_PRINT));
                 }
-                $this->parse($data);
+                $leaderboard = $this->parse($data);
             }
+            $this->generateRep($leaderboard);
         }
         catch (\Exception $e) {
             $this->error($e->getMessage());
@@ -128,9 +131,115 @@ class GetLeaderboard extends Command
     }
 
     /**
+     * Generate representation data for this leaderboard.
+     *
+     * @param Leaderboard $leaderboard
+     */
+    public function generateRep(Leaderboard $leaderboard)
+    {
+        $datas = [
+            'role' => [],
+            'spec' => [],
+            'race' => [],
+        ];
+
+        $datas['role'] = DB::table('stats AS s')
+            ->select([
+                'p.role_id',
+                DB::raw('COUNT(*) AS num'),
+            ])
+            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
+            ->leftJoin('roles AS r', 'p.role_id', '=', 'r.id')
+            ->where('s.leaderboard_id', '=', $leaderboard->id)
+            ->groupBy('p.role_id')
+            ->orderBy('num', 'DESC')
+            ->get()
+            ->toArray();
+
+        $datas['spec'] = DB::table('stats AS s')
+            ->select([
+                'p.role_id',
+                'p.spec_id',
+                DB::raw('COUNT(*) AS num'),
+            ])
+            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
+            ->leftJoin('specs AS sp', 'p.spec_id', '=', 'sp.id')
+            ->leftJoin('roles AS r', 'sp.role_id', '=', 'r.id')
+            ->where('s.leaderboard_id', '=', $leaderboard->id)
+            ->groupBy('p.spec_id')
+            ->orderBy('num', 'DESC')
+            ->get()
+            ->toArray();
+
+        $datas['race'] = DB::table('stats AS s')
+            ->select([
+                'p.race_id',
+                DB::raw('COUNT(*) AS num'),
+            ])
+            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
+            ->leftJoin('races AS r', 'p.race_id', '=', 'r.id')
+            ->where('s.leaderboard_id', '=', $leaderboard->id)
+            ->groupBy('p.race_id')
+            ->orderBy('num', 'DESC')
+            ->get()
+            ->toArray();
+
+        $datas['role_race'] = DB::table('stats AS s')
+            ->select([
+                'p.role_id',
+                'p.race_id',
+                DB::raw('COUNT(*) AS num'),
+            ])
+            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
+            ->leftJoin('races AS r', 'p.race_id', '=', 'r.id')
+            ->where('s.leaderboard_id', '=', $leaderboard->id)
+            ->groupBy('p.role_id', 'p.race_id')
+            ->orderBy('num', 'DESC')
+            ->get()
+            ->toArray();
+
+        $datas['spec_race'] = DB::table('stats AS s')
+            ->select([
+                'p.role_id',
+                'p.spec_id',
+                'p.race_id',
+                DB::raw('COUNT(*) AS num'),
+            ])
+            ->leftJoin('players AS p', 's.player_id', '=', 'p.id')
+            ->leftJoin('races AS r', 'p.race_id', '=', 'r.id')
+            ->where('s.leaderboard_id', '=', $leaderboard->id)
+            ->groupBy('p.spec_id', 'p.race_id')
+            ->orderBy('num', 'DESC')
+            ->get()
+            ->toArray();
+
+        Rep::where('leaderboard_id', '=', $leaderboard->id)->delete();
+
+        foreach ($datas as $k => $data) {
+            foreach ($data as $obj) {
+                $params = [
+                    'leaderboard_id' => $leaderboard->id,
+                    'num' => $obj->num,
+                ];
+                if (isset($obj->role_id)) {
+                    $params['role_id'] = $obj->role_id;
+                }
+                if (isset($obj->spec_id)) {
+                    $params['spec_id'] = $obj->spec_id;
+                }
+                if (isset($obj->race_id)) {
+                    $params['race_id'] = $obj->race_id;
+                }
+                Rep::create($params);
+            }
+        }
+    }
+
+    /**
      * Reads data from a file then parses it.
      *
      * @param string $file
+     * @return Leaderboard
      * @throws Exception
      */
     public function parseFile($file)
@@ -143,13 +252,14 @@ class GetLeaderboard extends Command
         if (!$data) {
             throw new \Exception("Could not parse JSON data.");
         }
-        $this->parse($data);
+        return $this->parse($data);
     }
 
     /**
      * Parse leaderboard data.
      *
      * @param array $data
+     * @return Leaderboard
      */
     public function parse($data)
     {
@@ -321,5 +431,7 @@ class GetLeaderboard extends Command
 
         $leaderboard->completed_at = date("Y-m-d H:i:s");
         $leaderboard->save();
+
+        return $leaderboard;
     }
 }
