@@ -237,11 +237,10 @@ class IndexController extends Controller
             if ($om->term) {
                 $q->where('term_id', '=', $om->term->id);
             }
-            $region_leaderboard_ids = $q->whereNotNull('completed_at')
+            $leaderboard_ids[] = $q->whereNotNull('completed_at')
                 ->orderBy('created_at', 'DESC')
-                ->pluck('id')
-                ->toArray();
-            $leaderboard_ids = array_merge($leaderboard_ids, $region_leaderboard_ids);
+                ->first()
+                ->id;
         }
         return $leaderboard_ids;
     }

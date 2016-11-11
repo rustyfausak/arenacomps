@@ -45,4 +45,15 @@ $(document).ready(function () {
         }
     });
     $('[data-waterfall-to]').trigger('change');
+    $('[data-expando]').on('click', function () {
+        var target = $($(this).attr('data-expando'));
+        target.toggle();
+        target.removeClass('hide');
+        if (target.is(':visible')) {
+            $(this).text('less');
+        }
+        else {
+            $(this).text('more');
+        }
+    });
 });

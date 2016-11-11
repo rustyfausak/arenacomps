@@ -4,6 +4,7 @@
         <a href="{{ route('leaderboard', ['class' => $role_id]) }}">
             @include('snippets.role', ['role' => $roles[$role_id]])
         </a>
+        @include('stats.expando')
     </td>
     <td class="text-right">{{ sprintf("%01.1f", $arr['pct']) }}%</td>
     <td class="text-right">{{ $arr['num'] }}</td>

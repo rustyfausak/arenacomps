@@ -15,13 +15,21 @@
                 <div class="panel-heading">
                     Classes
                 </div>
-                <table class="table table-striped table-bordered table-condensed table-hover">
+                <table class="table table-striped table-bordered table-condensed">
                     <tbody>
                         @foreach ($stats['by_role'] as $role_id => $arr)
-                            @include('stats.role')
-                            @foreach ($arr['by_race'] as $race_id => $arr)
-                                @include('stats.race')
-                            @endforeach
+                            @include('stats.role', ['expando' => '#expando-role-' . $role_id])
+                            <tr id="expando-role-{{ $role_id }}" class="hide">
+                                <td colspan="100%" style="padding: 12px;">
+                                    <table class="table table-striped table-bordered table-condensed table-sm no-margin-bottom">
+                                        <tbody>
+                                            @foreach ($arr['by_race'] as $race_id => $arr)
+                                                @include('stats.race')
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -35,10 +43,18 @@
                 <table class="table table-striped table-bordered table-condensed">
                     <tbody>
                         @foreach ($stats['by_spec'] as $spec_id => $arr)
-                            @include('stats.spec')
-                            @foreach ($arr['by_race'] as $race_id => $arr)
-                                @include('stats.race')
-                            @endforeach
+                            @include('stats.spec', ['expando' => '#expando-spec-' . $spec_id])
+                            <tr id="expando-spec-{{ $spec_id }}" class="hide">
+                                <td colspan="100%" style="padding: 12px;">
+                                    <table class="table table-striped table-bordered table-condensed table-sm no-margin-bottom">
+                                        <tbody>
+                                            @foreach ($arr['by_race'] as $race_id => $arr)
+                                                @include('stats.race')
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -52,10 +68,19 @@
                 <table class="table table-striped table-bordered table-condensed">
                     <tbody>
                         @foreach ($stats['by_race'] as $race_id => $arr)
-                            @include('stats.race')
-                            @foreach ($arr['by_role'] as $role_id => $arr)
-                                @include('stats.role')
-                            @endforeach
+                            @include('stats.race', ['expando' => '#expando-race-' . $race_id])
+                            <tr id="expando-race-{{ $race_id }}" class="hide">
+                                <td colspan="100%" style="padding: 12px;">
+                                    <table class="table table-striped table-bordered table-condensed table-sm no-margin-bottom">
+                                        <tbody>
+                                           @foreach ($arr['by_role'] as $role_id => $arr)
+                                                @include('stats.role')
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+
                         @endforeach
                     </tbody>
                 </table>
