@@ -82,8 +82,21 @@ class OptionsManager
             $this->terms = [$this->term];
         }
         else {
-            $this->terms = Term::all()->toArray();
+            $this->terms = Term::all();
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return 'season: ' . $this->season
+            . ' / bracket: ' . $this->bracket
+            . ' / region: ' . $this->region
+            . ' / term: ' . $this->term
+            . ' / team: ' . $this->team
+            . ' / comp: ' . $this->comp;
     }
 
     /**

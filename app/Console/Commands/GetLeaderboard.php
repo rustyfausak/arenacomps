@@ -7,6 +7,7 @@ use App\BattleNetApi;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 
+use App\OptionsManager;
 use App\Models\Bracket;
 use App\Models\Faction;
 use App\Models\Gender;
@@ -213,14 +214,15 @@ class GetLeaderboard extends Command
             ->get()
             ->toArray();
 
-        Rep::where('leaderboard_id', '=', $leaderboard->id)->delete();
-
+        $om = new OptionsManager(
+            $leaderboard->season,
+            $leaderboard->bracket,
+            $leaderboard->region,
+            $leaderboard->term
+        );
         foreach ($datas as $k => $data) {
             foreach ($data as $obj) {
-                $params = [
-                    'leaderboard_id' => $leaderboard->id,
-                    'num' => $obj->num,
-                ];
+                $params = [];
                 if (isset($obj->role_id)) {
                     $params['role_id'] = $obj->role_id;
                 }
@@ -230,7 +232,7 @@ class GetLeaderboard extends Command
                 if (isset($obj->race_id)) {
                     $params['race_id'] = $obj->race_id;
                 }
-                Rep::create($params);
+                Rep::collapse($om, $params, $obj->num);
             }
         }
     }
@@ -299,42 +301,44 @@ class GetLeaderboard extends Command
         $factions = Faction::all()->getDictionary();
         $genders = Gender::all()->getDictionary();
 
-        foreach ($data['rows'] as $n => $row) {
-            foreach ([
-                'ranking',
-                'rating',
-                'name',
-                'realmId',
-                'realmName',
-                'realmSlug',
-                'raceId',
-                'classId',
-                'specId',
-                'factionId',
-                'genderId',
-                'seasonWins',
-                'seasonLosses',
-                'weeklyWins',
-                'weeklyLosses',
-            ] as $key) {
-                if (!array_key_exists($key, $row)) {
-                    throw new \Exception("Invalid row #{$n}: Missing key '{$key}'.");
+        if (false) {
+            foreach ($data['rows'] as $n => $row) {
+                foreach ([
+                    'ranking',
+                    'rating',
+                    'name',
+                    'realmId',
+                    'realmName',
+                    'realmSlug',
+                    'raceId',
+                    'classId',
+                    'specId',
+                    'factionId',
+                    'genderId',
+                    'seasonWins',
+                    'seasonLosses',
+                    'weeklyWins',
+                    'weeklyLosses',
+                ] as $key) {
+                    if (!array_key_exists($key, $row)) {
+                        throw new \Exception("Invalid row #{$n}: Missing key '{$key}'.");
+                    }
                 }
-            }
-            if (!in_array($row['raceId'], array_keys($races))) {
-                throw new \Exception("Invalid raceId on row #{$n}: '{$row['raceId']}'.");
-            }
-            if (!in_array($row['classId'], array_keys($roles))) {
-                throw new \Exception("Invalid classId on row #{$n}: '{$row['classId']}'.");
-            }
-            if (!in_array($row['specId'], array_keys($specs))) {
-                throw new \Exception("Invalid specId on row #{$n}: '{$row['specId']}'.");
-            }
-            if (!in_array($row['factionId'], array_keys($factions))) {
-                throw new \Exception("Invalid factionId on row #{$n}: '{$row['factionId']}'.");
-            }
-            if (!in_array($row['genderId'], array_keys($genders))) {
-                throw new \Exception("Invalid genderId on row #{$n}: '{$row['genderId']}'.");
+                if (!in_array($row['raceId'], array_keys($races))) {
+                    throw new \Exception("Invalid raceId on row #{$n}: '{$row['raceId']}'.");
+                }
+                if (!in_array($row['classId'], array_keys($roles))) {
+                    throw new \Exception("Invalid classId on row #{$n}: '{$row['classId']}'.");
+                }
+                if (!in_array($row['specId'], array_keys($specs))) {
+                    throw new \Exception("Invalid specId on row #{$n}: '{$row['specId']}'.");
+                }
+                if (!in_array($row['factionId'], array_keys($factions))) {
+                    throw new \Exception("Invalid factionId on row #{$n}: '{$row['factionId']}'.");
+                }
+                if (!in_array($row['genderId'], array_keys($genders))) {
+                    throw new \Exception("Invalid genderId on row #{$n}: '{$row['genderId']}'.");
+                }
             }
         }
 

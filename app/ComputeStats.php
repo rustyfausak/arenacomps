@@ -22,9 +22,9 @@ class ComputeStats
     }
 
     /**
-     * @param array of Rep
+     * @param Builder $q
      */
-    public static function build($reps)
+    public static function build($q)
     {
         $data = [
             'by_role' => [],
@@ -44,7 +44,13 @@ class ComputeStats
         $base_by_race = array_merge($base, [
             'by_role' => [],
         ]);
-        foreach ($reps as $rep) {
+        $q->select([
+            'role_id',
+            'spec_id',
+            'race_id',
+            'num',
+        ]);
+        foreach ($q->get() as $rep) {
             if ($rep->role_id && !$rep->spec_id && !$rep->race_id) {
                 if (!array_key_exists($rep->role_id, $data['by_role'])) {
                     $data['by_role'][$rep->role_id] = $base_by_role;

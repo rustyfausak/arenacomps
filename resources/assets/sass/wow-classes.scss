@@ -23,3 +23,16 @@ $color-warrior: #C79C6E;
 .color-shaman { color: $color-shaman; }
 .color-warlock { color: $color-warlock; }
 .color-warrior { color: $color-warrior; }
+
+.ct-series-a .ct-line, .ct-series-a .ct-point { stroke: $color-warrior; }
+.ct-series-b .ct-line, .ct-series-b .ct-point { stroke: $color-paladin; }
+.ct-series-c .ct-line, .ct-series-b .ct-point { stroke: $color-hunter; }
+.ct-series-d .ct-line, .ct-series-b .ct-point { stroke: $color-rogue; }
+.ct-series-e .ct-line, .ct-series-e .ct-point { stroke: $color-priest; }
+.ct-series-f .ct-line, .ct-series-f .ct-point { stroke: $color-deathknight; }
+.ct-series-g .ct-line, .ct-series-g .ct-point { stroke: $color-shaman; }
+.ct-series-h .ct-line, .ct-series-h .ct-point { stroke: $color-mage; }
+.ct-series-i .ct-line, .ct-series-i .ct-point { stroke: $color-warlock; }
+.ct-series-j .ct-line, .ct-series-j .ct-point { stroke: $color-monk; }
+.ct-series-k .ct-line, .ct-series-k .ct-point { stroke: $color-druid; }
+.ct-series-l .ct-line, .ct-series-l .ct-point { stroke: $color-demonhunter; }

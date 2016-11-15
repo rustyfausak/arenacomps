@@ -343,22 +343,91 @@ class IndexController extends Controller
 
     public function getStats()
     {
-        $leaderboard_ids = $this->_getLeaderboardIds();
-        $reps = Rep::whereIn('leaderboard_id', $leaderboard_ids)->get();
-        $stats = ComputeStats::build($reps);
+        $season_end_date = $this->om->season->end_date ? $this->om->season->end_date : date("Y-m-d");
+        $term_end_date = $this->om->term && $this->om->term->end_date ? $this->om->term->end_date : date("Y-m-d");
+        $use_end_date = min($season_end_date, $term_end_date);
+        $q = DB::table('reps')
+            ->orderBy('role_id')
+            ->orderBy('spec_id')
+            ->orderBy('race_id')
+            ->where('for_date', '=', $use_end_date)
+            ->where('bracket_id', '=', $this->om->bracket->id);
+        if ($this->om->region) {
+            $q->where('region_id', '=', $this->om->region->id);
+        }
+        else {
+            $q->whereNull('region_id');
+        }
+        $stats = ComputeStats::build($q);
 
         $tmp = [];
         foreach ($this->om->regions as $region) {
             $tmp[] = $region->name;
         }
         $region_str = implode(' / ', $tmp);
+
+        $chart = [
+            'labels' => [],
+            'series' => [],
+        ];
+
+        $q = DB::table('reps')
+            ->whereNull('spec_id')
+            ->whereNull('race_id')
+            ->whereNotNull('role_id')
+            ->orderBy('for_date', 'ASC')
+            ->where('bracket_id', '=', $this->om->bracket->id);
+        if ($this->om->region) {
+            $q->where('region_id', '=', $this->om->region->id);
+        }
+        else {
+            $q->whereNull('region_id');
+        }
+
+        $tmp_start_date = $this->om->season->start_date;
+        if ($this->om->term) {
+            $tmp_start_date = max($tmp_start_date, $this->om->term->start_date);
+        }
+        $ts = strtotime($tmp_start_date);
+        $end_ts = strtotime($use_end_date);
+        $ts = max($ts, strtotime("-7 day", $end_ts)); // dont allow more than 1 month worth
+        $use_start_date = date("Y-m-d", $ts);
+
+        $q->where('for_date', '>=', $use_start_date)
+            ->where('for_date', '<=', $use_end_date);
+
+        $chart_data = [];
+        $chart_roles = Role::orderBy('id', 'ASC')->get();
+        while ($ts <= $end_ts) {
+            $date = date("Y-m-d", $ts);
+            $chart['labels'][] = $date;
+            foreach ($chart_roles as $role) {
+                $chart_data[$role->id][$date] = 0;
+            }
+            $ts = strtotime("+1 day", $ts);
+        }
+
+        foreach ($q->get() as $rep) {
+            $chart_data[$rep->role_id][$rep->for_date] = $rep->num;
+        }
+
+        foreach ($chart_data as $role_id => $by_date) {
+            $chart['series'][] = array_values($by_date);
+        }
+
         return view('stats', [
             'stats' => $stats,
             'roles' => Role::all()->getDictionary(),
             'specs' => Spec::all()->getDictionary(),
             'races' => Race::all()->getDictionary(),
             'region_str' => $region_str,
+            'chart' => $chart,
         ]);
+    }
+
+    public function getTest()
+    {
+        return view('test');
     }
 
     public function postSetOptions(Request $request)

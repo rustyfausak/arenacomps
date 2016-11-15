@@ -32,9 +32,13 @@
 # developing
 
  - install [Node >= 6.x](https://nodejs.org/en/download/)
-   - `npm install`
-   - `gulp`
+   - `npm install` install node packages
+   - `gulp` to generate css and js assets
 
-# collecting data
+# commands
 
-    $ php artisan leaderboard:get -h
+    - `php artisan leaderboard:get` collect leaderboard data
+    - `php artisan comps:generate` generate comp data
+    - `php artisan comps:clear` clear comp data
+    - `php artisan performance:generate` generate performance data
+    - `php artisan performance:clear` clear performance data

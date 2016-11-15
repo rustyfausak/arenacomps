@@ -7,6 +7,10 @@
 // Bootstrap
 @import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
 
+// Chartist
+@import "bower_components/chartist/dist/scss/chartist";
+@import "bower_components/chartist/dist/scss/settings/_chartist-settings";
+
 @import "wow-classes";
 
 #brand {

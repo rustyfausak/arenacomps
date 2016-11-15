@@ -12,4 +12,12 @@ class Season extends Model
     public $timestamps = false;
     protected $table = 'seasons';
     protected $guarded = [];
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

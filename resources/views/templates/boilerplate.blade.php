@@ -10,17 +10,20 @@
     <link rel="stylesheet" type="text/css" href="{{ url('css/app.css') }}">
 
     <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+      <script src="//oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    @yield('head' ,'')
+
+    @stack('head')
 </head>
 <body>
     @yield('body', '')
 
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
     <script src="{{ url('js/app.js') }}"></script>
 
-    @yield('foot', '')
+    @stack('foot')
 </body>
 </html>
