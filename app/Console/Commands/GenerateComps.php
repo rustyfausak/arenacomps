@@ -17,6 +17,7 @@ use App\Models\Race;
 use App\Models\Realm;
 use App\Models\Region;
 use App\Models\Role;
+use App\Models\Season;
 use App\Models\Snapshot;
 use App\Models\Spec;
 use App\Models\Stat;
@@ -48,14 +49,19 @@ class GenerateComps extends Command
      * The minimum number of times a player must be put on a team with another player before
      * the team can be finalized.
      */
-    const MIN_TEAMMATE_COUNT = 5;
+    const MIN_TEAMMATE_COUNT = 10;
+
+    /**
+     * The minimum number of times a team must be formed with players before it can be finalized.
+     */
+    const MIN_TEAM_COUNT = 10;
 
     /**
      * A number between 0 and 1 representing the amount of weight to put on ratings being similar.
      * Two players within 30 rating of each other will have an additional num_games_similar * rating_weight
      * applied.
      */
-    const RATING_WEIGHT = 1;
+    const RATING_WEIGHT = 0.5;
 
     /**
      * Cache for player ID in group ID
@@ -81,7 +87,10 @@ class GenerateComps extends Command
      */
     public function getOptions()
     {
-        return [];
+        $season = Season::getActive();
+        return [
+            ['season_id', 's', InputOption::VALUE_OPTIONAL, 'The season ID.', $season->id],
+        ];
     }
 
     /**
@@ -90,6 +99,7 @@ class GenerateComps extends Command
     public function handle()
     {
         try {
+            $season = Season::findOrFail($this->option('season_id'));
             $q = DB::table('snapshots AS s')
                 ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
                 ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
@@ -107,7 +117,7 @@ class GenerateComps extends Command
                         ->orWhereNull('s.comp_id');
                 })
                 ->whereNotNull('l.completed_at')
-                ->whereRaw('l.completed_at > (NOW() - INTERVAL 1 WEEK)')
+                ->where('l.season_id', '=', $season->id)
                 ->groupBy('s.player_id', 'l.bracket_id')
                 ->orderBy('s.rating', 'DESC');
             $results = $q->get();
@@ -174,8 +184,7 @@ class GenerateComps extends Command
             ->groupBy('player_id')
             ->orderBy('num', 'DESC')
             ->orderBy('avg_rating', 'DESC')
-            ->limit($bracket_size + 1)
-            ->having('num', '>', self::MIN_SIMILAR_SNAPSHOTS)
+            ->having('num', '>=', max(floor(sizeof($snapshot_ids) * 0.1), self::MIN_SIMILAR_SNAPSHOTS))
             ->get()
             ->toArray();
         //$this->line("\tFound " . sizeof($other_player_data) . " related players.");
@@ -227,6 +236,7 @@ class GenerateComps extends Command
             }
 
             // Save the teammate IDs to the snapshot
+            sort($team_player_ids);
             $snapshot->team_player_ids = $team_player_ids;
         }
 
@@ -249,6 +259,7 @@ class GenerateComps extends Command
             return;
         }
 
+        $team_counts = [];
         foreach ($player_snapshots as $snapshot) {
             if (!sizeof($snapshot->team_player_ids)) {
                 continue;
@@ -272,6 +283,23 @@ class GenerateComps extends Command
             }
             if (!$all) {
                 // Not all team players were valid teammates
+                continue;
+            }
+            $key = implode(',', $snapshot->team_player_ids);
+            if (!array_key_exists($key, $team_counts)) {
+                $team_counts[$key] = 0;
+            }
+            $team_counts[$key]++;
+        }
+        foreach ($player_snapshots as $snapshot) {
+            if (!sizeof($snapshot->team_player_ids)) {
+                continue;
+            }
+            $key = implode(',', $snapshot->team_player_ids);
+            if (!array_key_exists($key, $team_counts)) {
+                continue;
+            }
+            if ($team_counts[$key] < self::MIN_TEAM_COUNT) {
                 continue;
             }
             $this->build($snapshot, $snapshot->team_player_ids);
