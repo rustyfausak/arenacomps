@@ -33,7 +33,9 @@
 
  - install [Node >= 6.x](https://nodejs.org/en/download/)
    - `npm install` install node packages
-   - `gulp` to generate css and js assets
+ - install [Bower](https://www.npmjs.com/package/bower)
+   - `bower install` install bower packages
+ - `gulp` to generate css and js assets
 
 # commands
 
