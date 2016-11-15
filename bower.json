@@ -1,0 +1,20 @@
+{
+  "name": "arenacomps",
+  "description": "",
+  "main": "",
+  "authors": [
+    "Rusty Fausak <rustyfausak@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/rustyfausak/arenacomps",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "chartist": "^0.10.1"
+  }
+}
