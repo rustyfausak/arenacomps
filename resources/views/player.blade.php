@@ -82,26 +82,33 @@
                         $team_performance = $team->getPerformance($om);
                         $comps = $team->getComps();
                         $num_comps = sizeof($comps);
-                        $comp = $comps->shift();
-                        $team_om = $om;
-                        $team_om->team_id = $team->id;
-                        $comp_performance = $comp->getPerformance($team_om);
+                        $comp = null;
+                        if ($num_comps) {
+                            $comp = $comps->shift();
+                            $team_om = $om;
+                            $team_om->team_id = $team->id;
+                            $comp_performance = $comp->getPerformance($team_om);
+                        }
                         ?>
                         <tr>
                             <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
                             <td><a href="{{ route('player', $team->player_id2) }}">{{ $team->player2->name }}</a></td>
                             <td><a href="{{ route('player', $team->player_id3) }}">{{ $team->player3->name }}</a></td>
-                            @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
-                                <td>
-                                    @include('snippets.role-spec', [
-                                        'role' => $spec->role->name,
-                                        'spec' => $spec->name
-                                    ])
-                                </td>
-                            @endforeach
-                            <td>{{ $comp_performance->avg_rating }}</td>
-                            <td>{{ $comp_performance->wins }}</td>
-                            <td>{{ $comp_performance->losses }}</td>
+                            @if ($comp)
+                                @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
+                                    <td>
+                                        @include('snippets.role-spec', [
+                                            'role' => $spec->role->name,
+                                            'spec' => $spec->name
+                                        ])
+                                    </td>
+                                @endforeach
+                                <td>{{ $comp_performance->avg_rating }}</td>
+                                <td>{{ $comp_performance->wins }}</td>
+                                <td>{{ $comp_performance->losses }}</td>
+                            @else
+                                <td colspan="4"></td>
+                            @endif
                         </tr>
                         @foreach ($comps as $comp)
                             <?php
