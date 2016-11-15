@@ -83,5 +83,5 @@
         </tbody>
     </table>
 
-    {{ $performances->appends(['s' => $sort, 'd' => $sort_dir])->links() }}
+    {{ $performances->links() }}
 @endsection

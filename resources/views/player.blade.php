@@ -18,7 +18,7 @@
                             <th>Race</th>
                             <td>
                                 @include('snippets.race', [
-                                    'race' => $player->race->name ,
+                                    'race' => $player->race->getName(),
                                     'gender' => $player->gender->name
                                 ])
                             </td>

@@ -43,7 +43,7 @@
                     </td>
                     <td>
                         @include('snippets.race', [
-                            'race' => $stat->player->race->name,
+                            'race' => $stat->player->race->getName(),
                             'gender' => $stat->player->gender->name
                         ])
                     </td>
@@ -64,5 +64,5 @@
         </tbody>
     </table>
 
-    {{ $stats->links() }}
+    {{ $stats->appends(['class' => $role ? $role->id : ''])->links() }}
 @endsection

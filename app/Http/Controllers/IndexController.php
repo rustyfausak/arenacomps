@@ -156,14 +156,17 @@ class IndexController extends Controller
         }
 
         $qs = '';
+        $appends = [];
         foreach ($roles as $i => $role) {
             if ($role) {
                 $qs .= '&class' . ($i + 1) . '=' . urlencode($role->id);
+                $appends['class' . ($i + 1)] = $role->id;
             }
         }
         foreach ($specs as $i => $spec) {
             if ($spec) {
                 $qs .= '&spec' . ($i + 1) . '=' . urlencode($spec->id);
+                $appends['spec' . ($i + 1)] = $spec->id;
             }
         }
 
@@ -212,6 +215,12 @@ class IndexController extends Controller
         }
         $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
         $performances = $q->paginate(20);
+
+        $performances->appends(array_merge($appends, [
+            's' => $sort,
+            'd' => $sort_dir,
+        ]));
+
         return view('comps', [
             'performances' => $performances,
             'roles' => $roles,
@@ -219,7 +228,7 @@ class IndexController extends Controller
             'bracket_size' => $om->bracket->size,
             'sort_dir' => $sort_dir,
             'sort' => $sort,
-            'qs' => $qs,
+            'qs' => $qs
         ]);
     }
 
@@ -237,10 +246,12 @@ class IndexController extends Controller
             if ($om->term) {
                 $q->where('term_id', '=', $om->term->id);
             }
-            $leaderboard_ids[] = $q->whereNotNull('completed_at')
+            $leaderboard = $q->whereNotNull('completed_at')
                 ->orderBy('created_at', 'DESC')
-                ->first()
-                ->id;
+                ->first();
+            if ($leaderboard) {
+                $leaderboard_ids[] = $leaderboard->id;
+            }
         }
         return $leaderboard_ids;
     }

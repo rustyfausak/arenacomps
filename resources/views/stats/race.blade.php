@@ -2,7 +2,7 @@
     <td class="text-right">{{ $loop->iteration }}</td>
     <td>
         @include('snippets.race', [
-            'race' => $races[$race_id]->name,
+            'race' => $races[$race_id]->getName(),
             'gender' => null,
         ])
         @include('stats.expando')

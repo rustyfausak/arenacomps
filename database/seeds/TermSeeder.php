@@ -14,7 +14,8 @@ class TermSeeder extends Seeder
     public function run()
     {
         foreach ([
-            ['7.1 nov 3 hotfix', '2016-11-03', null],
+            ['7.1 nov 3 hotfix', '2016-11-03', '2016-11-14'],
+            ['7.1 nov 15 hotfix', '2016-11-15', null],
         ] as $data) {
             $date = $data[1];
             $season = Season::where('start_date', '<=', $date)
