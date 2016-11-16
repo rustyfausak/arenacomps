@@ -40,7 +40,7 @@ class GenerateComps_v2 extends Command
      */
     protected $description = 'Generate the comp data.';
 
-    const SESSION_LIMIT_MINUTES = 19;
+    const SESSION_LIMIT_MINUTES = 14;
     const MIN_SESSION_SNAPSHOTS = 4;
     const MIN_SESSION_GAMES = 4;
     const ALLOWED_GAME_DIFF = 1;
@@ -81,8 +81,6 @@ class GenerateComps_v2 extends Command
                     ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
                     ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
                     ->where('l.bracket_id', '=', $bracket->id)
-                    ->whereNull('s.team_id')
-                    ->whereNull('s.comp_id')
                     ->groupBy('s.player_id')
                     ->orderBy('s.player_id', 'ASC');
                 foreach ($q->pluck('s.player_id') as $player_id) {
@@ -114,8 +112,6 @@ class GenerateComps_v2 extends Command
             ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
             ->where('l.bracket_id', '=', $bracket->id)
             ->where('s.player_id', '=', $player_id)
-            ->whereNull('s.team_id')
-            ->whereNull('s.comp_id')
             ->orderBy('l.id', 'ASC');
         $sessions = [];
         $cur_session = null;
