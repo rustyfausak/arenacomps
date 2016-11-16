@@ -87,9 +87,9 @@ class GenerateComps extends Command
      */
     public function getOptions()
     {
-        $season = Season::getActive();
+
         return [
-            ['season_id', 's', InputOption::VALUE_OPTIONAL, 'The season ID.', $season->id],
+            ['season_id', 's', InputOption::VALUE_OPTIONAL, 'The season ID.', null],
         ];
     }
 
@@ -99,7 +99,10 @@ class GenerateComps extends Command
     public function handle()
     {
         try {
-            $season = Season::findOrFail($this->option('season_id'));
+            $season = Season::find($this->option('season_id'));
+            if (!$season) {
+                $season = Season::getActive();
+            }
             $q = DB::table('snapshots AS s')
                 ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
                 ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')

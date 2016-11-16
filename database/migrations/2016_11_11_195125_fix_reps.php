@@ -14,7 +14,7 @@ class FixReps extends Migration
     public function up()
     {
         DB::table('reps')->truncate();
-        Schema::table('reps', function ($table) {
+        Schema::table('reps', function (Blueprint $table) {
             $table->dropIndex(['leaderboard_id']);
             $table->dropColumn('leaderboard_id');
             $table->date('for_date');
@@ -34,7 +34,7 @@ class FixReps extends Migration
      */
     public function down()
     {
-        Schema::table('reps', function ($table) {
+        Schema::table('reps', function (Blueprint $table) {
             $table->integer('leaderboard_id')->unsigned();
             $table->index('leaderboard_id');
             $table->dropIndex(['for_date']);

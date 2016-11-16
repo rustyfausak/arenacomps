@@ -16,8 +16,10 @@ class FixSpecs extends Migration
     public function up()
     {
         $spec = Spec::find(73);
-        $spec->role_id = 1;
-        $spec->save();
+        if ($spec) {
+            $spec->role_id = 1;
+            $spec->save();
+        }
     }
 
     /**

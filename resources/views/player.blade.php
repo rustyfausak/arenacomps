@@ -151,9 +151,11 @@
                     <tr>
                         <th>Timestamp</th>
                         <th>Spec</th>
-                        <th>Rating</th>
-                        <th>Wins</th>
-                        <th>Losses</th>
+                        <th class="text-right">Rating</th>
+                        <th class="text-right">Wins</th>
+                        <th class="text-right">Losses</th>
+                        <th class="text-right">Team</th>
+                        <th class="text-right">Comp</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -166,9 +168,19 @@
                                     'spec' => $snapshot->spec->name
                                 ])
                             </td>
-                            <td>{{ $snapshot->rating }}</td>
-                            <td>{{ $snapshot->group->wins }}</td>
-                            <td>{{ $snapshot->group->losses }}</td>
+                            <td class="text-right">{{ $snapshot->rating }}</td>
+                            <td class="text-right">{{ $snapshot->group->wins }}</td>
+                            <td class="text-right">{{ $snapshot->group->losses }}</td>
+                            <td class="text-right">
+                                @if ($snapshot->team)
+                                    {{ implode('/', $snapshot->team->getPlayers()) }}
+                                @endif
+                            </td>
+                            <td class="text-right">
+                                @if ($snapshot->comp)
+                                    {{ implode('/', $snapshot->comp->getSpecs()) }}
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
