@@ -115,8 +115,8 @@ class Performance extends Model
         $q = DB::table('snapshots AS s')
             ->select([
                 DB::raw('AVG(s.rating) AS avg_rating'),
-                DB::raw('g.wins'),
-                DB::raw('g.losses'),
+                DB::raw('SUM(g.wins) AS wins'),
+                DB::raw('SUM(g.losses) AS losses'),
             ])
             ->leftJoin('groups AS g', 's.group_id', '=', 'g.id')
             ->leftJoin('leaderboards AS l', 'g.leaderboard_id', '=', 'l.id')
@@ -134,7 +134,7 @@ class Performance extends Model
         if ($om->comp) {
             $q->where('s.comp_id', '=', $om->comp->id);
         }
-        $results = $q->groupBy('s.group_id', 's.team_id')
+        $results = $q->groupBy('s.team_id')
             ->get();
         foreach ($results as $result) {
             $data['num_snapshots']++;
@@ -145,8 +145,8 @@ class Performance extends Model
         if ($data['num_snapshots']) {
             $data['avg_rating'] = round($data['total_rating'] / $data['num_snapshots']);
         }
-        $performance->wins = $data['wins'];
-        $performance->losses = $data['losses'];
+        $performance->wins = floor($data['wins'] / $om->bracket->size);
+        $performance->losses = floor($data['losses'] / $om->bracket->size);
         $performance->avg_rating = $data['avg_rating'];
         $performance->skill = self::getSkill($data['wins'], $data['losses'], $data['avg_rating']);
         if ($om->comp && !$om->team) {

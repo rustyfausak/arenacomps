@@ -29,4 +29,38 @@ class Leaderboard extends Model
     {
         return $this->belongsTo('App\Models\Term', 'term_id', 'id');
     }
+
+    /**
+     * Returns the previous leaderboard.
+     *
+     * @return Leaderboard
+     */
+    public function getPrevious()
+    {
+        return self::where('region_id', '=', $this->region_id)
+            ->where('bracket_id', '=', $this->bracket_id)
+            ->where('season_id', '=', $this->season_id)
+            ->where('term_id', '=', $this->term_id)
+            ->where('id', '<', $this->id)
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->first();
+    }
+
+    /**
+     * Returns the next leaderboard.
+     *
+     * @return Leaderboard
+     */
+    public function getNext()
+    {
+        return self::where('region_id', '=', $this->region_id)
+            ->where('bracket_id', '=', $this->bracket_id)
+            ->where('season_id', '=', $this->season_id)
+            ->where('term_id', '=', $this->term_id)
+            ->where('id', '>', $this->id)
+            ->orderBy('id', 'ASC')
+            ->limit(1)
+            ->first();
+    }
 }

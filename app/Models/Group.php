@@ -24,4 +24,12 @@ class Group extends Model
     {
         return $this->hasMany('App\Models\Snapshots', 'snapshot_id', 'id');
     }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return "group #{$this->id}:\tLB #{$this->leaderboard_id}\tFAC #{$this->faction_id}\t({$this->wins}-{$this->losses})";
+    }
 }
