@@ -9,13 +9,17 @@
      - XML PHP Extension
    - [MySQL](https://www.mysql.com/downloads/)
    - [Apache](https://httpd.apache.org/download.cgi)
+     - `rewrite_module`
  - [Composer](https://getcomposer.org/)
  - [git](https://git-scm.com/downloads)
+ - [Node >= 6.x](https://nodejs.org/en/download/)
+ - [Bower](https://www.npmjs.com/package/bower)
 
 # installation
 
     $ git clone https://github.com/rustyfausak/arenacomps arenacomps
     // set `storage/` and `bootstrap/cache/` to be writeable by your web server
+    // set web root to `arenacomps/public/`
     $ cd arenacomps
     $ composer install
     $ cp .env.example .env
@@ -24,18 +28,9 @@
     $ mysql -u .. -p ..
     > create database arenacomps character set utf8 collate utf8_unicode_ci;
     $ php artisan migrate:refresh --seed
-
-# configuration
-
- - set web root to `arenacomps/public/`
-
-# developing
-
- - install [Node >= 6.x](https://nodejs.org/en/download/)
-   - `npm install` install node packages
- - install [Bower](https://www.npmjs.com/package/bower)
-   - `bower install` install bower packages
- - `gulp` to generate css and js assets
+    $ npm install
+    $ bower install
+    $ gulp
 
 # commands
 
