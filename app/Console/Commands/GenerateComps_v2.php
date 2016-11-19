@@ -26,66 +26,31 @@ use App\Models\Team;
 
 class GenerateComps_v2 extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $name = 'comps:generate-v2';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Generate the comp data.';
 
-    const SESSION_LIMIT_MINUTES = 14;
-    const MIN_SESSION_SNAPSHOTS = 4;
-    const MIN_SESSION_GAMES = 4;
-    const ALLOWED_GAME_DIFF = 1;
-    const MIN_TEAMMATE_SESSION_COUNT = 2;
-    protected $debug;
+    const MIN_TEAMMATE_COUNT = 10;
+    const MIN_CONSECUTIVE = 5;
+    const ALLOW_MISS = true;
+    const MAX_RATING_DIFF = 250;
+    const MAX_TEAMMATES = 10;
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->debug = false;
-    }
-
-    /**
-     * Specify the command options.
-     *
-     * @return array
-     */
     public function getOptions()
     {
-        return [];
+        return [
+            ['player_id', 'p', InputOption::VALUE_OPTIONAL, 'The player ID.', null],
+        ];
     }
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         try {
-            foreach (Bracket::all() as $bracket) {
-                print "Bracket {$bracket->name}\n";
-                $q = DB::table('snapshots AS s')
-                    ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
-                    ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
-                    ->where('l.bracket_id', '=', $bracket->id)
-                    ->groupBy('s.player_id')
-                    ->orderBy('s.player_id', 'ASC');
-                foreach ($q->pluck('s.player_id') as $player_id) {
-                    $this->processPlayerById($bracket, $player_id);
-                }
+            $bracket = Bracket::getDefault();
+            if ($this->option('player_id')) {
+                $this->processPlayer($bracket, Player::findOrFail($this->option('player_id')));
+            }
+            else {
+                $this->processBracket($bracket);
             }
         }
         catch (\Exception $e) {
@@ -94,223 +59,258 @@ class GenerateComps_v2 extends Command
         }
     }
 
-    public function processPlayerById($bracket, $player_id)
+    public function processBracket(Bracket $bracket)
     {
-        print "\tplayer #{$player_id}\n";
-        $q = DB::table('snapshots AS s')
-            ->select([
-                'l.created_at',
-                'l.id AS leaderboard_id',
-                'g.wins',
-                'g.losses',
-                'g.faction_id',
-                's.id AS snapshot_id',
-                's.rating',
-                's.spec_id',
-            ])
+        print "Bracket {$bracket}\n";
+        // Find relevant players
+        $player_ids = DB::table('snapshots AS s')
             ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
             ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
             ->where('l.bracket_id', '=', $bracket->id)
-            ->where('s.player_id', '=', $player_id)
-            ->orderBy('l.id', 'ASC');
-        $sessions = [];
-        $cur_session = null;
-        $last_ts = null;
-        $last_spec_id = null;
-        foreach ($q->get() as $row) {
-            $cur_ts = strtotime($row->created_at);
-            if (!$last_ts) {
-                $cur_session = new ArenaSession($row);
+            ->whereNull('s.team_id')
+            ->groupBy('s.player_id')
+            ->orderBy('s.player_id', 'ASC')
+            ->pluck('s.player_id');
+        $all_total = 0;
+        $all_w_players = 0;
+        $all_matched = 0;
+        foreach ($player_ids as $k => $player_id) {
+            $player = Player::find($player_id);
+            print sprintf("%20s", $player) . "\t";
+            list($total, $w_players, $matched) = $this->processPlayer($bracket, $player);
+            print $total . "\t";
+            if ($total) {
+                print sprintf("%01.2f", round(($w_players / $total) * 100, 2)) . "% (";
+                print sprintf("%01.2f", round(($matched / $total) * 100, 2)) . "%)\t";
             }
-            else {
-                if ($row->spec_id != $last_spec_id || $cur_ts - $last_ts > 60 * self::SESSION_LIMIT_MINUTES) {
-                    $sessions[] = $cur_session;
-                    $cur_session = new ArenaSession($row);
-                }
-                else {
-                    $cur_session->extend($row);
-                }
+            $all_total += $total;
+            $all_w_players += $w_players;
+            $all_matched += $matched;
+            if ($all_total) {
+                print sprintf("%01.2f", round(($all_w_players / $all_total) * 100, 2)) . "% (";
+                print sprintf("%01.2f", round(($all_matched / $all_total) * 100, 2)) . "%)\t";
             }
-            $last_ts = $cur_ts;
-            $last_spec_id = $row->spec_id;
-        }
-        if ($cur_session) {
-            $sessions[] = $cur_session;
-        }
-        foreach ($sessions as $session) {
-            if ($session->num < self::MIN_SESSION_SNAPSHOTS) {
-                continue;
-            }
-            if ($session->wins + $session->losses < self::MIN_SESSION_GAMES) {
-                continue;
-            }
-            $this->processArenaSession($session, $bracket, $player_id);
-        }
-
-        // Count up the number of teams each player was put on a team together
-        $by_player_id = [];
-        foreach ($sessions as $session) {
-            if (!$session->result) {
-                continue;
-            }
-            foreach ($session->result['player_ids'] as $team_player_id) {
-                if ($team_player_id == $player_id) {
-                    continue;
-                }
-                if (!array_key_exists($team_player_id, $by_player_id)) {
-                    $by_player_id[$team_player_id] = 0;
-                }
-                $by_player_id[$team_player_id]++;
-            }
-        }
-
-        foreach ($sessions as $session) {
-            if (!$session->result) {
-                continue;
-            }
-            $all = true;
-            foreach ($session->result['player_ids'] as $team_player_id) {
-                if ($team_player_id == $player_id) {
-                    continue;
-                }
-                if ($by_player_id[$team_player_id] < self::MIN_TEAMMATE_SESSION_COUNT) {
-                    $all = false;
-                    break;
-                }
-            }
-            if ($all) {
-                $team = Team::getOrBuild($session->result['player_ids']);
-                $comp = Comp::getOrBuild($session->result['spec_ids']);
-                DB::table('snapshots AS s')
-                    ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
-                    ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
-                    ->whereIn('l.id', $session->leaderboard_ids)
-                    ->whereIn('s.player_id', $session->result['player_ids'])
-                    ->update([
-                        's.team_id' => $team->id,
-                        's.comp_id' => $comp->id
-                    ]);
-                print "\t\t\tsession {$session->start_leaderboard_id} :: team {$team->id} comp {$comp->id} " . implode(',', $session->result['player_ids']) . "\n";
-            }
+            print sprintf("%01.2f", round($k / sizeof($player_ids), 2)) . "%";
+            print "\n";
         }
     }
 
-    public function processArenaSession($session, $bracket, $player_id)
+    /**
+     * @param Bracket $bracket
+     * @param Player  $player
+     */
+    public function processPlayer(Bracket $bracket, Player $player)
     {
-        print "\t\tsession {$session->start_leaderboard_id} - {$session->end_leaderboard_id}\n";
-        $session->leaderboard_ids = $session->getLeaderboardIds();
-        if ($this->debug) {
-            print_r($session);
-            print_r($leaderboard_ids);
-        }
-        $q = DB::table('snapshots AS s')
-            ->select([
-                's.player_id',
-                DB::raw('SUM(g.wins) AS wins'),
-                DB::raw('SUM(g.losses) AS losses'),
-                DB::raw('AVG(s.rating) AS rating'),
-                DB::raw('GROUP_CONCAT(s.spec_id) AS spec_ids'),
-            ])
+        Team::where('player_id1', '=', $player->id)
+            ->orWhere('player_id2', '=', $player->id)
+            ->orWhere('player_id3', '=', $player->id)
+            ->delete();
+        Snapshot::where('player_id', '=', $player->id)
+            ->update([
+                'team_id' => null,
+                'comp_id' => null
+            ]);
+        // Get all the groups that this player has participated in
+        $group_ids = DB::table('snapshots AS s')
+            ->select('g.id')
             ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
             ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
-            ->whereIn('l.id', $session->leaderboard_ids)
-            ->where('s.player_id', '!=', $player_id)
-            ->where('g.faction_id', '=', $session->faction_id)
-            ->groupBy('s.player_id');
-        $related = [];
-        foreach ($q->get() as $row) {
-            if (abs($row->wins + $row->losses - ($session->wins + $session->losses)) > self::ALLOWED_GAME_DIFF) {
-                continue;
-            }
-            if (abs($row->wins - $session->wins) > self::ALLOWED_GAME_DIFF) {
-                continue;
-            }
-            if (abs($row->losses - $session->losses) > self::ALLOWED_GAME_DIFF) {
-                continue;
-            }
-            $row->spec_ids = array_count_values(explode(',', $row->spec_ids));
-            $related[] = $row;
-        }
-        if (sizeof($related) < $bracket->size - 1) {
+            ->where('l.bracket_id', '=', $bracket->id)
+            ->where('s.player_id', '=', $player->id)
+            ->orderBy('g.id', 'ASC')
+            ->pluck('g.id');
+
+        if (!sizeof($group_ids)) {
+            print "x\n";
             return;
         }
-        $sort = [];
-        foreach ($related as $k => $row) {
-            $game_diff = abs($row->wins + $row->losses - ($session->wins + $session->losses));
-            $sort[$k] = ($game_diff + 1) * abs($row->rating - $session->rating);
-        }
-        array_multisort($sort, SORT_ASC, $related);
-        $related = array_slice($related, 0, $bracket->size - 1);
-        $player_ids = [$player_id];
-        arsort($session->spec_ids);
-        $spec_ids = [key($session->spec_ids)];
-        foreach ($related as $row) {
-            $player_ids[] = $row->player_id;
-            arsort($row->spec_ids);
-            $spec_ids[] = key($row->spec_ids);
-        }
-        if (sizeof($player_ids) != $bracket->size || sizeof($spec_ids) != $bracket->size) {
-            return;
-        }
-        $session->result = [
-            'player_ids' => $player_ids,
-            'spec_ids' => $spec_ids,
-        ];
-    }
-}
 
-class ArenaSession
-{
-    public function __construct($row)
-    {
-        $this->start_leaderboard_id = $row->leaderboard_id;
-        $this->end_leaderboard_id = $row->leaderboard_id;
-        $this->wins = $row->wins;
-        $this->losses = $row->losses;
-        $this->faction_id = $row->faction_id;
-        $this->num = 1;
-        $this->rating = $row->rating;
-        $this->spec_ids[$row->spec_id] = 1;
-        $this->result = null;
-        $this->leaderboard_ids = [];
-    }
+        // Now we want to find players that matched the groups this player participated in. Furthermore, we want to
+        // place more importance on players that match _consecutive_ groups, since we're interested in teams and teams
+        // usually play together consecutively.
 
-    public function extend($row)
-    {
-        $this->start_leaderboard_id = min($row->leaderboard_id, $this->start_leaderboard_id);
-        $this->end_leaderboard_id = max($row->leaderboard_id, $this->end_leaderboard_id);
-        $this->wins += $row->wins;
-        $this->losses += $row->losses;
-        $this->rating = ($this->rating * $this->num + $row->rating) / ($this->num + 1);
-        if (!array_key_exists($row->spec_id, $this->spec_ids)) {
-            $this->spec_ids[$row->spec_id] = 0;
-        }
-        $this->spec_ids[$row->spec_id]++;
-        $this->num++;
-    }
+        $cur = [];
+        $gid_to_pids = [];
 
-    public function getLeaderboardIds()
-    {
-        $leaderboard_ids = [
-            $this->start_leaderboard_id,
-            $this->end_leaderboard_id
-        ];
-        $start = Leaderboard::findOrFail($this->start_leaderboard_id);
-        $prev = $start->getPrevious();
-        if ($prev) {
-            $leaderboard_ids[] = $prev->id;
+        // If self::ALLOW_MISS is true, we allow a single group miss on a consecutive streak
+        $to_chop = [];
+
+        foreach ($group_ids as $group_id) {
+            // Find all the other players that exactly matched this group
+            $gid_to_pids[$group_id] = [];
+            $player_ids = DB::table('snapshots AS s')
+                ->select('s.player_id')
+                ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
+                ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
+                ->where('g.id', '=', $group_id)
+                ->where('s.player_id', '!=', $player->id)
+                ->orderBY('s.player_id', 'ASC')
+                ->pluck('s.player_id')
+                ->toArray();
+            $new = [];
+            foreach ($player_ids as $player_id) {
+                if (!array_key_exists($player_id, $cur)) {
+                    $new[$player_id] = [$group_id];
+                }
+                else {
+                    $new[$player_id] = $cur[$player_id];
+                    $new[$player_id][] = $group_id;
+                }
+            }
+            $diff = array_diff_key($cur, $new);
+            $cur = $new;
+            foreach ($diff as $player_id => $gids) {
+                if (self::ALLOW_MISS && !in_array($player_id, $to_chop)) {
+                    $cur[$player_id] = array_merge($gids, [$group_id]);
+                    continue;
+                }
+                if (sizeof($gids) <= self::MIN_CONSECUTIVE) {
+                    continue;
+                }
+                foreach ($gids as $gid) {
+                    $gid_to_pids[$gid][] = $player_id;
+                }
+            }
+            $to_chop = array_keys($diff);
         }
-        $end = Leaderboard::findOrFail($this->end_leaderboard_id);
-        $next = $end->getNext();
-        if ($next) {
-            $leaderboard_ids[] = $next->id;
+
+        // Count up the occurences of each player
+        $pid_count = [];
+        foreach ($gid_to_pids as $gid => $pids) {
+            foreach ($pids as $pid) {
+                if (!array_key_exists($pid, $pid_count)) {
+                    $pid_count[$pid] = 0;
+                }
+                $pid_count[$pid]++;
+            }
         }
-        $q = Leaderboard::where('id', '>', $start->id)
-            ->where('id', '<', $end->id)
-            ->where('bracket_id', '=', $start->bracket_id)
-            ->where('region_id', '=', $start->region_id);
-        $leaderboard_ids = array_merge($leaderboard_ids, $q->pluck('id')->toArray());
-        $leaderboard_ids = array_unique(array_filter($leaderboard_ids));
-        return $leaderboard_ids;
+
+        // Sort by number of occurences
+        arsort($pid_count);
+
+        // Limit to the maximum number of teammates
+        $pid_count = array_slice($pid_count, 0, self::MAX_TEAMMATES, true);
+
+        // Remove teammates with less than the required number of group matches
+        $remove = [];
+        foreach ($pid_count as $pid => $count) {
+            if ($count < self::MIN_TEAMMATE_COUNT) {
+                $remove[$pid] = 1;
+            }
+        }
+        $pid_count = array_diff_key($pid_count, $remove);
+
+        // Filter out players that are no longer valid from the gid_to_pids map
+        $remove = [];
+        foreach ($gid_to_pids as $gid => $pids) {
+            $gid_to_pids[$gid] = array_intersect($pids, array_keys($pid_count));
+            if (sizeof($gid_to_pids[$gid]) < $bracket->size - 1) {
+                unset($gid_to_pids[$gid]);
+            }
+        }
+
+        $teamid_to_snapids = [];
+        $compid_to_snapids = [];
+        $pid_to_sid = [];
+        $matched = 0;
+        foreach ($gid_to_pids as $gid => $pids) {
+            //print $gid . "\t" . implode(',', $pids) . "\t";
+            $team_pids = null;
+            if (sizeof($pids) == $bracket->size - 1) {
+                // exact size match, form the team
+                //print 'E';
+                $team_pids = $pids;
+            }
+            else {
+                $tmp_gids = array_keys($gid_to_pids);
+                $at_key = array_search($gid, $tmp_gids);
+                $before_pids = [];
+                $after_pids = [];
+                if ($at_key !== false) {
+                    if ($at_key > 0) {
+                        $before_pids = $gid_to_pids[$tmp_gids[$at_key - 1]];
+                    }
+                    if ($at_key + 1 < sizeof($tmp_gids)) {
+                        $after_pids = $gid_to_pids[$tmp_gids[$at_key + 1]];
+                    }
+                }
+                $sort = [];
+                foreach ($pids as $k => $pid) {
+                    $sort[$k] = $pid_count[$pid];
+                }
+                array_multisort($sort, SORT_DESC, $pids);
+                $check_pids = array_slice($pids, 0, $bracket->size - 1);
+                $all = true;
+                foreach ($check_pids as $pid) {
+                    if (!in_array($pid, $before_pids) || !in_array($pid, $after_pids)) {
+                        $all = false;
+                        break;
+                    }
+                }
+                if ($all) {
+                    //print 'A';
+                    $team_pids = $check_pids;
+                }
+            }
+            if ($team_pids) {
+                $team_pids[] = $player->id;
+                $snap_ids = [];
+                $matched++;
+                $q = Snapshot::select([
+                        'id',
+                        'spec_id',
+                        'player_id',
+                    ])
+                    ->whereIn('player_id', $team_pids)
+                    ->where('group_id', '=', $gid);
+                foreach ($q->get() as $row) {
+                    $snap_ids[] = $row->id;
+                    $pid_to_sid[$row->player_id] = $row->spec_id;
+                }
+                $spec_ids = [];
+                foreach ($team_pids as $pid) {
+                    if (array_key_exists($pid, $pid_to_sid)) {
+                        $spec_ids[] = $pid_to_sid[$pid];
+                    }
+                }
+                if (sizeof($team_pids) == $bracket->size && sizeof($spec_ids) == $bracket->size) {
+                    //print "\t+";
+                    $team = Team::getOrBuild($team_pids);
+                    $comp = Comp::getOrBuild($spec_ids);
+                    if (!array_key_exists($team->id, $teamid_to_snapids)) {
+                        $teamid_to_snapids[$team->id] = [];
+                    }
+                    if (!array_key_exists($comp->id, $compid_to_snapids)) {
+                        $compid_to_snapids[$comp->id] = [];
+                    }
+                    foreach ($snap_ids as $snap_id) {
+                        $teamid_to_snapids[$team->id][] = $snap_id;
+                        $compid_to_snapids[$comp->id][] = $snap_id;
+                    }
+                }
+                else {
+                    //print "\t-";
+                }
+            }
+            //print "\n";
+        }
+
+        foreach ($teamid_to_snapids as $team_id => $snap_ids) {
+            Snapshot::whereIn('id', $snap_ids)
+                ->update(['team_id' => $team_id]);
+        }
+
+        foreach ($compid_to_snapids as $comp_id => $snap_ids) {
+            Snapshot::whereIn('id', $snap_ids)
+                ->update(['comp_id' => $comp_id]);
+        }
+
+        $total = sizeof($group_ids);
+        $w_players = sizeof($gid_to_pids);
+        //print_r($gid_to_pids);
+        //print_r($pid_count);
+        //exit;
+        return [$total, $w_players, $matched];
+
     }
 }
