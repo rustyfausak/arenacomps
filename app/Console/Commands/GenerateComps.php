@@ -90,7 +90,7 @@ class GenerateComps extends Command
                 print sprintf("%01.2f", round(($all_w_players / $all_total) * 100, 2)) . "% (";
                 print sprintf("%01.2f", round(($all_matched / $all_total) * 100, 2)) . "%)\t";
             }
-            print $k . " / " . sizeof($player_ids) . "\t" . sprintf("%01.2f", round($k / sizeof($player_ids), 2)) . "%";
+            print $k . " / " . sizeof($player_ids) . "\t" . sprintf("%01.2f", round(($k / sizeof($player_ids)) * 100, 2)) . "%";
             print "\n";
         }
     }
