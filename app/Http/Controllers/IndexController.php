@@ -441,6 +441,11 @@ class IndexController extends Controller
         return view('test');
     }
 
+    public function getContact()
+    {
+        return view('contact');
+    }
+
     public function postSetOptions(Request $request)
     {
         OptionsManager::setBracket($request->input('bracket'));
