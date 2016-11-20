@@ -218,17 +218,22 @@ class IndexController extends Controller
         }
         if ($min_games > 0) {
             $q->whereRaw('wins + losses > ?', $min_games);
+            $qs .= '&mg=' . $min_games;
         }
         if ($min_teams > 0) {
             $q->where('num_teams', '>', $min_teams);
+            $qs .= '&mt=' . $min_teams;
         }
         $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
         $performances = $q->paginate(20);
 
-        $performances->appends(array_merge($appends, [
+        $link_params = array_merge($appends, [
             's' => $sort,
             'd' => $sort_dir,
-        ]));
+            'mt' => '' . $min_teams,
+            'mg' => $min_games,
+        ]);
+        $performances->appends($link_params);
 
         return view('comps', [
             'performances' => $performances,
