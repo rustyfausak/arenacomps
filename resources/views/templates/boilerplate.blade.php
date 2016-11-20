@@ -7,7 +7,7 @@
     <title>@yield('title', 'arenacomps')</title>
 
     <link rel="shortcut icon" href="{{ url('favicon.ico') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url('css/app.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url('css/app.css') }}?v=@include('snippets.asset-version')">
 
     <!--[if lt IE 9]>
       <script src="//oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -22,7 +22,7 @@
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
-    <script src="{{ url('js/app.js') }}"></script>
+    <script src="{{ url('js/app.js') }}?v=@include('snippets.asset-version')"></script>
 
     @stack('foot')
 </body>
