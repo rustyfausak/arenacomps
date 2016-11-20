@@ -9,21 +9,38 @@
         <input type="hidden" name="d" value="{{ $sort_dir }}">
         @for ($i = 1; $i <= $bracket_size; $i++)
             <div class="form-group group-bubble">
-                <label>{{ $i }}</label>
-                <select name="class{{ $i }}" class="form-control" data-waterfall-to="#specs{{ $i }}">
-                    <option value="any">Any</option>
-                    @foreach (App\Models\Role::all() as $_role)
-                        <option data-waterfall-value="{{ $_role->id }}" class="color-{{ strtolower(str_replace(' ', '', $_role->name)) }}" value="{{ $_role->id }}" {{ $roles[$i - 1] && $_role->id == $roles[$i - 1]->id ? 'selected="selected"' : '' }}>{{ $_role->name }}</option>
-                    @endforeach
-                </select>
-                <select name="spec{{ $i }}" class="form-control" id="specs{{ $i }}">
-                    <option value="any">Any</option>
-                    @foreach (App\Models\Spec::all() as $_spec)
-                        <option data-waterfall-value="{{ $_spec->role->id }}" class="color-{{ strtolower(str_replace(' ', '', $_spec->role->name)) }}" value="{{ $_spec->id }}" {{ $specs[$i - 1] && $_spec->id == $specs[$i - 1]->id ? 'selected="selected"' : '' }}>{{ $_spec->name }}</option>
-                    @endforeach
-                </select>
+                <div class="input-label">
+                    <label>class</label>
+                    <select name="class{{ $i }}" class="form-control" data-waterfall-to=".specs{{ $i }}">
+                        <option value="any">Any</option>
+                        @foreach (App\Models\Role::all() as $_role)
+                            <option data-waterfall-value="{{ $_role->id }}" class="color-{{ strtolower(str_replace(' ', '', $_role->name)) }}" value="{{ $_role->id }}" {{ $roles[$i - 1] && $_role->id == $roles[$i - 1]->id ? 'selected="selected"' : '' }}>{{ $_role->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="input-label specs{{ $i }}">
+                    <label>spec</label>
+                    <select name="spec{{ $i }}" class="form-control">
+                        <option value="any">Any</option>
+                        @foreach (App\Models\Spec::all() as $_spec)
+                            <option data-waterfall-value="{{ $_spec->role->id }}" class="color-{{ strtolower(str_replace(' ', '', $_spec->role->name)) }}" value="{{ $_spec->id }}" {{ $specs[$i - 1] && $_spec->id == $specs[$i - 1]->id ? 'selected="selected"' : '' }}>{{ $_spec->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         @endfor
+        <div class="form-group group-bubble">
+            <div class="input-label">
+                <label># games</label>
+                <input type="text" name="mg" value="{{ $min_games ? $min_games : '' }}" class="form-control" style="width: 60px;" maxlength="3">
+            </div>
+        </div>
+        <div class="form-group group-bubble">
+            <div class="input-label">
+                <label># teams</label>
+                <input type="text" name="mt" value="{{ $min_teams ? $min_teams : '' }}" class="form-control" style="width: 60px;" maxlength="3">
+            </div>
+        </div>
         <div class="form-group form-group-bubble">
             <button type="submit" class="btn btn-primary" style="margin-left: 10px;">Submit</button>
             <a href="?" style="margin-left: 10px;">reset</a>

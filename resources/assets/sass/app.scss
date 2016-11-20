@@ -116,3 +116,24 @@ $alert-border-color: lighten($table-border-color, 10%);
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
 }
+
+.input-label {
+    position: relative;
+}
+
+.input-label label {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 9px;
+    color: #bbb;
+    font-weight: normal;
+}
+.input-label input {
+    padding-top: 11px;
+    height: 33px;
+}
+.input-label select {
+    height: 33px;
+    padding-top: 9px;
+}

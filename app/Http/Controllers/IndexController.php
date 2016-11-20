@@ -137,6 +137,9 @@ class IndexController extends Controller
         }
         $sort_dir = (bool) $request->input('d');
 
+        $min_games = abs(intval($request->input('mg')));
+        $min_teams = abs(intval($request->input('mt')));
+
         $roles = array_fill(0, $om->bracket->size, null);
         $specs = array_fill(0, $om->bracket->size, null);
 
@@ -213,6 +216,12 @@ class IndexController extends Controller
             $sort = 'wins';
             $sort_dir = 0;
         }
+        if ($min_games > 0) {
+            $q->whereRaw('wins + losses > ?', $min_games);
+        }
+        if ($min_teams > 0) {
+            $q->where('num_teams', '>', $min_teams);
+        }
         $q->orderBy($sort, $sort_dir ? 'ASC' : 'DESC');
         $performances = $q->paginate(20);
 
@@ -228,7 +237,9 @@ class IndexController extends Controller
             'bracket_size' => $om->bracket->size,
             'sort_dir' => $sort_dir,
             'sort' => $sort,
-            'qs' => $qs
+            'qs' => $qs,
+            'min_games' => $min_games,
+            'min_teams' => $min_teams,
         ]);
     }
 
