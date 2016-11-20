@@ -137,3 +137,10 @@ $alert-border-color: lighten($table-border-color, 10%);
     height: 33px;
     padding-top: 9px;
 }
+
+p {
+    line-height: 1.6;
+}
+p:last-child {
+    margin-bottom: 0;
+}

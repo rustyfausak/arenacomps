@@ -74,7 +74,7 @@ class IndexController extends Controller
         if ($this->om->term) {
             $q->where('l.term_id', '=', $this->om->term->id);
         }
-        $snapshots = $q->paginate(30);
+        $snapshots = $q->simplePaginate(30);
         return view('activity', [
             'leaderboard' => $leaderboard,
             'snapshots' => $snapshots
@@ -455,6 +455,11 @@ class IndexController extends Controller
     public function getContact()
     {
         return view('contact');
+    }
+
+    public function getFaq()
+    {
+        return view('faq');
     }
 
     public function postSetOptions(Request $request)
