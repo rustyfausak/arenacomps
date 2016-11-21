@@ -1,3 +1,9 @@
+$.fn.optVisible = function( show ) {
+    return show ?
+        this.filter( "span > option" ).unwrap() :
+        this.filter( ":not(span > option)" ).wrap( "<span>" ).parent().hide() ;
+}
+
 $(document).ready(function () {
     $('[data-click-input-name]').on('click', function () {
         $('[name="' + $(this).attr('data-click-input-name') + '"]').val($(this).attr('data-click-input-value'));
@@ -13,8 +19,8 @@ $(document).ready(function () {
         var val = $(this).find('option:selected').attr('data-waterfall-value');
         if (val) {
             target.show();
-            target.find('option[data-waterfall-value]').hide();
-            target.find('option[data-waterfall-value="' + val + '"]').show();
+            target.find('option[data-waterfall-value]').optVisible(false);
+            target.find('option[data-waterfall-value="' + val + '"]').optVisible(true);
             var opt = target.find("option:selected");
             if (opt.attr('data-waterfall-value') != val) {
                 opt.prop("selected", false);
