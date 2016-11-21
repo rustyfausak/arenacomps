@@ -17,7 +17,7 @@ class OptimizeMiddleware
     public function handle($request, Closure $next)
     {
         $response = $next($request);
-        if (!App::environment('local')) {
+        if (false) {
             $buffer = $response->getContent();
             $search = array(
                 '/\>[^\S ]+/s',  // strip whitespaces after tags, except space
