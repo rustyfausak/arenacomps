@@ -29,10 +29,6 @@
                 <table class="table table-striped table-bordered table-condensed">
                     <tbody>
                         <tr>
-                            <th>Avg Rating</th>
-                            <td>{{ $performance->avg_rating }}</td>
-                        </tr>
-                        <tr>
                             <th>Wins</th>
                             <td>{{ $performance->wins }}</td>
                         </tr>
@@ -66,13 +62,13 @@
             <thead>
                 <tr>
                     <th colspan="{{ sizeof($specs) }}">Players</th>
-                    <th>Avg Rating</th>
                     <th>W</th>
                     <th>L</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($teams as $team)
+                    @continue($team->performance->numGames() < config('app.min_games'))
                     <tr>
                         @foreach ($team->players as $player)
                             <td>
@@ -84,7 +80,6 @@
                                 </a>
                             </td>
                         @endforeach
-                        <td>{{ $team->performance->avg_rating }}</td>
                         <td>{{ $team->performance->wins }}</td>
                         <td>{{ $team->performance->losses }}</td>
                     </tr>

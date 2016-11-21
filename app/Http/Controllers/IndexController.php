@@ -132,7 +132,7 @@ class IndexController extends Controller
         $om = OptionsManager::build();
 
         $sort = $request->input('s');
-        if (!in_array($sort, ['avg_rating', 'wins', 'losses', 'ratio', 'num_teams'])) {
+        if (!in_array($sort, ['wins', 'losses', 'ratio', 'num_teams'])) {
             $sort = null;
         }
         $sort_dir = (bool) $request->input('d');

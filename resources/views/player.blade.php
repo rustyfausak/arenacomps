@@ -71,44 +71,46 @@
                     <tr>
                         <th colspan="3">Players</th>
                         <th colspan="3">Comp</th>
-                        <th>Rating</th>
                         <th>W</th>
                         <th>L</th>
+                        <th>Comp</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($teams as $team)
                         <?php
-                        $team_performance = $team->getPerformance($om);
                         $comps = $team->getComps();
-                        $num_comps = sizeof($comps);
-                        $comp = null;
-                        if ($num_comps) {
-                            $comp = $comps->shift();
-                            $team_om = $om;
-                            $team_om->team_id = $team->id;
+                        $remove = [];
+                        $team_om = $om;
+                        $team_om->team = $team;
+                        foreach ($comps as $k => $comp) {
                             $comp_performance = $comp->getPerformance($team_om);
+                            if ($comp_performance->numGames() < config('app.min_games')) {
+                                unset($comps[$k]);
+                            }
                         }
+                        $num_comps = sizeof($comps);
+                        if (!$num_comps) {
+                            continue;
+                        }
+                        $comp = $comps->shift();
+                        $comp_performance = $comp->getPerformance($team_om);
                         ?>
                         <tr>
                             <td><a href="{{ route('player', $team->player_id1) }}">{{ $team->player1->name }}</a></td>
                             <td><a href="{{ route('player', $team->player_id2) }}">{{ $team->player2->name }}</a></td>
                             <td><a href="{{ route('player', $team->player_id3) }}">{{ $team->player3->name }}</a></td>
-                            @if ($comp)
-                                @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
-                                    <td>
-                                        @include('snippets.role-spec', [
-                                            'role' => $spec->role->name,
-                                            'spec' => $spec->name
-                                        ])
-                                    </td>
-                                @endforeach
-                                <td>{{ $comp_performance->avg_rating }}</td>
-                                <td>{{ $comp_performance->wins }}</td>
-                                <td>{{ $comp_performance->losses }}</td>
-                            @else
-                                <td colspan="4"></td>
-                            @endif
+                            @foreach (App\Models\Spec::sort($comp->getSpecs()) as $spec)
+                                <td>
+                                    @include('snippets.role-spec', [
+                                        'role' => $spec->role->name,
+                                        'spec' => $spec->name
+                                    ])
+                                </td>
+                            @endforeach
+                            <td>{{ $comp_performance->wins }}</td>
+                            <td>{{ $comp_performance->losses }}</td>
+                            <td><a href="{{ route('comp', $comp->id) }}">view</a></a>
                         </tr>
                         @foreach ($comps as $comp)
                             <?php
@@ -124,19 +126,11 @@
                                         ])
                                     </td>
                                 @endforeach
-                                <td>{{ $comp_performance->avg_rating }}</td>
                                 <td>{{ $comp_performance->wins }}</td>
                                 <td>{{ $comp_performance->losses }}</td>
+                                <td><a href="{{ route('comp', $comp->id) }}">view</a></a>
                             </tr>
                         @endforeach
-                        @if ($num_comps > 1)
-                            <tr>
-                                <td colspan="6" class="text-right">Total</td>
-                                <td>{{ $team_performance->avg_rating }}</td>
-                                <td>{{ $team_performance->wins }}</td>
-                                <td>{{ $team_performance->losses }}</td>
-                            </tr>
-                        @endif
                     @endforeach
                 </tbody>
             </table>

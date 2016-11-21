@@ -3,6 +3,7 @@
 return [
 
     'google_analytics_key' => env('GOOGLE_ANALYTICS_KEY', false),
+    'min_games' => 5,
 
     /*
     |--------------------------------------------------------------------------

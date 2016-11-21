@@ -54,7 +54,6 @@
             <tr>
                 <th colspan="3">Comp</th>
                 @foreach ([
-                    'avg_rating' => 'Avg Rating',
                     'wins' => 'W',
                     'losses' => 'L',
                     'ratio' => 'W/L Ratio',
@@ -86,7 +85,6 @@
                             ])
                         </td>
                     @endforeach
-                    <td class="text-right">{{ $performance->avg_rating }}</td>
                     <td class="text-right">{{ $performance->wins }}</td>
                     <td class="text-right">{{ $performance->losses }}</td>
                     <td class="text-right">{{ round($performance->wins / max(1, $performance->losses),2) }}</td>

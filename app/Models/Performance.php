@@ -40,6 +40,14 @@ class Performance extends Model
     }
 
     /**
+     * @return int
+     */
+    public function numGames()
+    {
+        return $this->wins + $this->losses;
+    }
+
+    /**
      * @param int $wins
      * @param int $losses
      * @return float
