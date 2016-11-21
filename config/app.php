@@ -2,6 +2,8 @@
 
 return [
 
+    'google_analytics_key' => env('GOOGLE_ANALYTICS_KEY', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Name

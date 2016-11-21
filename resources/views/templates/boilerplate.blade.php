@@ -24,6 +24,10 @@
     <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
     <script src="{{ url('js/app.js') }}?v=@include('snippets.asset-version')"></script>
 
+    @if (App::environment('production'))
+        @include('snippets.google-tracking')
+    @endif
+
     @stack('foot')
 </body>
 </html>
