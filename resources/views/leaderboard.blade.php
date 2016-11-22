@@ -21,22 +21,29 @@
     <table class="table table-striped table-bordered table-condensed">
         <thead>
             <tr>
-                <th>Player</th>
+                <th colspan="2">Player</th>
                 <th>Realm</th>
                 <th>Race</th>
                 <th>Class/Spec</th>
-                <th>Rating</th>
-                <th>Ranking</th>
-                <th>W</th>
-                <th>L</th>
-                <th>Week W</th>
-                <th>Week L</th>
+                <th class="text-right">Rating</th>
+                <th class="text-right">Ranking</th>
+                <th class="text-right">W</th>
+                <th class="text-right">L</th>
+                <th class="text-right">Week W</th>
+                <th class="text-right">Week L</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($stats as $stat)
                 <tr>
-                    <td><a href="{{ route('player', $stat->player->id) }}">{{ $stat->player->name }}</a></td>
+                    <td>
+                        <a href="{{ route('player', $stat->player->id) }}">{{ $stat->player->name }}</a>
+                    </td>
+                    <td class="text-center">
+                        <a href="http://{{ $stat->player->realm->region->name }}.battle.net/wow/en/character/{{ $stat->player->realm->slug }}/{{ $stat->player->name }}/simple" target="_blank">
+                            @include('icons.armory')
+                        </a>
+                    </td>
                     <td>
                         @include('icons.region', ['region' => $stat->player->realm->region->name])
                         {{ $stat->player->realm->name }}
@@ -53,12 +60,12 @@
                             'spec' => $stat->player->spec->name
                         ])
                     </td>
-                    <td>{{ $stat->rating }}</td>
-                    <td>{{ $stat->ranking }}</td>
-                    <td>{{ $stat->season_wins }}</td>
-                    <td>{{ $stat->season_losses }}</td>
-                    <td>{{ $stat->weekly_wins }}</td>
-                    <td>{{ $stat->weekly_losses }}</td>
+                    <td class="text-right">{{ $stat->rating }}</td>
+                    <td class="text-right">{{ $stat->ranking }}</td>
+                    <td class="text-right">{{ $stat->season_wins }}</td>
+                    <td class="text-right">{{ $stat->season_losses }}</td>
+                    <td class="text-right">{{ $stat->weekly_wins }}</td>
+                    <td class="text-right">{{ $stat->weekly_losses }}</td>
                 </tr>
             @endforeach
         </tbody>

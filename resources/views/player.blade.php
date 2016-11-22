@@ -11,6 +11,15 @@
                 </div>
                 <table class="table table-condensed">
                     <tbody>
+                        <tr>
+                            <th>Armory</th>
+                            <td>
+                                <a href="http://{{ $player->realm->region->name }}.battle.net/wow/en/character/{{ $player->realm->slug }}/{{ $player->name }}/simple" target="_blank">
+                                    Armory
+                                    @include('icons.ext-link')
+                                </a>
+                            </td>
+                        </tr>
                         <tr><th>Region</th><td>{{ $player->realm->region->name }}</td></tr>
                         <tr><th>Realm</th><td>{{ $player->realm->name }}</td></tr>
                         <tr><th>Faction</th><td>{{ $player->faction->name }}</td></tr>
@@ -59,7 +68,7 @@
 
     @if ($om->region && $player->realm->region->id != $om->region->id)
         <div class="alert alert-warning">
-            Player from different region
+            No player data for this region.
         </div>
     @else
         <div class="panel panel-default">
