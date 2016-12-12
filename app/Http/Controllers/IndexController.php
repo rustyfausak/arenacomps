@@ -417,7 +417,7 @@ class IndexController extends Controller
         }
         $ts = strtotime($tmp_start_date);
         $end_ts = strtotime($use_end_date);
-        $ts = max($ts, strtotime("-7 day", $end_ts)); // dont allow more than 1 month worth
+        $ts = max($ts, strtotime("-100 day", $end_ts)); // dont allow more than 1 month worth
         $use_start_date = date("Y-m-d", $ts);
 
         $q->where('for_date', '>=', $use_start_date)

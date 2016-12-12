@@ -21,10 +21,17 @@
                             @include('stats.role', ['expando' => '#expando-role-' . $role_id])
                             <tr id="expando-role-{{ $role_id }}" class="hide">
                                 <td colspan="100%" style="padding: 12px;">
+                                    <table class="table table-striped table-bordered table-condensed table-sm">
+                                        <tbody>
+                                            @foreach ($arr['by_spec'] as $spec_id => $x)
+                                                @include('stats.spec', ['arr' => $x])
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                     <table class="table table-striped table-bordered table-condensed table-sm no-margin-bottom">
                                         <tbody>
-                                            @foreach ($arr['by_race'] as $race_id => $arr)
-                                                @include('stats.race')
+                                            @foreach ($arr['by_race'] as $race_id => $x)
+                                                @include('stats.race', ['arr' => $x])
                                             @endforeach
                                         </tbody>
                                     </table>
@@ -33,9 +40,6 @@
                         @endforeach
                     </tbody>
                 </table>
-                <div class="panel-body">
-                    <div id="chart-roles" class="ct-chart ct-minor-sixth"></div>
-                </div>
             </div>
         </div>
         <div class="col-sm-4">
@@ -83,11 +87,21 @@
                                     </table>
                                 </td>
                             </tr>
-
                         @endforeach
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Class Representation Over Time
+        </div>
+        <div class="panel-body">
+            <div id="chart-roles" class="ct-chart ct-minor-sixth"></div>
         </div>
     </div>
 @endsection
