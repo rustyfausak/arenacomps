@@ -34,6 +34,7 @@ class GenerateComps extends Command
     const ALLOW_MISS = true;
     const MAX_RATING_DIFF = 250;
     const MAX_TEAMMATES = 10;
+    const DAYS = 14;
 
     public function getOptions()
     {
@@ -68,6 +69,7 @@ class GenerateComps extends Command
             ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
             ->where('l.bracket_id', '=', $bracket->id)
             ->whereNull('s.team_id')
+            ->whereRaw('l.created_at > (NOW() - INTERVAL ' . self::DAYS . ' DAY)')
             ->groupBy('s.player_id')
             ->orderBy('s.player_id', 'ASC')
             ->pluck('s.player_id');
@@ -101,20 +103,12 @@ class GenerateComps extends Command
      */
     public function processPlayer(Bracket $bracket, Player $player)
     {
-        Team::where('player_id1', '=', $player->id)
-            ->orWhere('player_id2', '=', $player->id)
-            ->orWhere('player_id3', '=', $player->id)
-            ->delete();
-        Snapshot::where('player_id', '=', $player->id)
-            ->update([
-                'team_id' => null,
-                'comp_id' => null
-            ]);
         // Get all the groups that this player has participated in
         $group_ids = DB::table('snapshots AS s')
             ->select('g.id')
             ->leftJoin('groups AS g', 'g.id', '=', 's.group_id')
             ->leftJoin('leaderboards AS l', 'l.id', '=', 'g.leaderboard_id')
+            ->whereRaw('l.created_at > (NOW() - INTERVAL ' . self::DAYS . ' DAY)')
             ->where('l.bracket_id', '=', $bracket->id)
             ->where('s.player_id', '=', $player->id)
             ->orderBy('g.id', 'ASC')
