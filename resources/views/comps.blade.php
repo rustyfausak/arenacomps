@@ -56,7 +56,7 @@
                 @foreach ([
                     'wins' => 'W',
                     'losses' => 'L',
-                    'ratio' => 'W/L Ratio',
+                    'ratio' => 'Win %',
                     'num_teams' => '# Teams',
                 ] as $k => $v)
                     <th class="text-right">
@@ -87,7 +87,7 @@
                     @endforeach
                     <td class="text-right">{{ $performance->wins }}</td>
                     <td class="text-right">{{ $performance->losses }}</td>
-                    <td class="text-right">{{ round($performance->wins / max(1, $performance->losses),2) }}</td>
+                    <td class="text-right">{{ sprintf("%d", round($performance->wins / max(1, $performance->wins + $performance->losses) * 100)) }}%</td>
                     <td class="text-right">
                         <a href="{{ route('comp', $performance->comp->id) }}">
                             {{ $performance->num_teams }}
