@@ -1,7 +1,7 @@
 Hello
 
 I decided to shut down arenacomps.com because it costs money and I don't play WoW anymore.
-I recognize that this tool may be useful to other people, so I am open sourcing the codebase.
+I recognize that this tool may be useful to other people, so I am open-sourcing the codebase.
 If someone wants to create their own, go for it.
 
 -rfausak
